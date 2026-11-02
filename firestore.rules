@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+
+    // Private profile: only the owner.
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Personal ID lookup. Knowing an ID is the invitation, so a signed-in user may read one ID at a time. No listing.
+    match /bondIds/{id} {
+      allow get: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'name'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 40;
+    }
+
+    // People who chose "visible to everyone".
+    match /directory/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // People who chose "visible to selected people" and picked you.
+    match /visibleTo/{target}/by/{by} {
+      allow read: if signedIn() && request.auth.uid == target;
+      allow write: if signedIn() && request.auth.uid == by;
+    }
+
+    // Pigeons and invitations waiting for someone.
+    match /inbox/{target}/requests/{from} {
+      allow read, delete: if signedIn() && request.auth.uid == target;
+      allow create, update: if signedIn()
+        && request.auth.uid == from
+        && from != target
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 240;
+    }
+
+    // A private conversation between exactly two people.
+    match /chats/{chatId} {
+      allow get: if signedIn() && (resource == null || request.auth.uid in resource.data.members);
+      allow list: if signedIn() && request.auth.uid in resource.data.members;
+      allow create: if signedIn()
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.members.size() == 2
+        && exists(/databases/$(database)/documents/inbox/$(request.auth.uid)/requests/$(
+             request.resource.data.members[0] == request.auth.uid
+               ? request.resource.data.members[1]
+               : request.resource.data.members[0]));
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.members
+        && request.resource.data.members == resource.data.members
+        && request.resource.data.names == resource.data.names;
+
+      match /messages/{mid} {
+        allow read: if signedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+        allow create: if signedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 2000
+          && request.resource.data.kind in ['text', 'letter'];
+      }
+    }
+
+    // Feedback: friends write their own, only you read it (in the Firebase console).
+    match /feedback/{uid} {
+      allow create, update: if signedIn() && request.auth.uid == uid;
+    }
+  }
+}

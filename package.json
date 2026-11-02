@@ -1,0 +1,7 @@
+{
+  "name": "bonfire",
+  "private": true,
+  "scripts": { "build": "esbuild src/backend.js --bundle --minify --format=iife --outfile=backend.bundle.js" },
+  "dependencies": { "firebase": "10.14.1" },
+  "devDependencies": { "esbuild": "0.24.0" }
+}
