@@ -208,6 +208,9 @@ html{-webkit-text-size-adjust:100%}
 .gatebox{max-width:440px;margin:12vh auto 0;display:flex;flex-direction:column;gap:16px;text-align:center;align-items:center}
 .gatebox h1{font-size:2.6rem}
 .gatebox .flame{width:14px;height:14px;border-radius:50%;background:var(--ember);box-shadow:0 0 28px 8px rgba(255,122,47,.5)}
+input[type=file]{padding:8px;font-size:13px}
+.at{display:flex;align-items:center;gap:6px}
+.at span{color:var(--muted)}
 @media (max-width:820px){
   .app{grid-template-columns:minmax(0,1fr);gap:16px;padding-bottom:96px;padding-top:16px}
   .nav{position:fixed;left:0;right:0;bottom:0;top:auto;flex-direction:row;justify-content:space-around;background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));z-index:40;gap:0;align-self:auto}
@@ -306,7 +309,7 @@ function seed(){
     fbShown:0
   };
 }
-var S,LIVE=null,DEMO=false,JOIN=null,live={inbox:[],chats:[],msgs:{},unsubs:{}};
+var S,LIVE=null,DEMO=false,JOIN=null,live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{}};
 try{var raw=localStorage.getItem('bonfire-v1');S=raw?JSON.parse(raw):null}catch(e){S=null}
 if(!S||!S.friends)S=seed();
 try{JOIN=new URLSearchParams(location.search).get('join')}catch(e){}
@@ -322,7 +325,7 @@ function freshLive(uid){
 function loadLive(uid){var r=null;try{r=JSON.parse(localStorage.getItem('bonfire-live-'+uid))}catch(e){}
   if(!r||!r.spaces)r=freshLive(uid);r.friends=[];r.chats={};r.unread={};r.letters=[];return r}
 function friend(id){return S.friends.filter(function(f){return f.id===id})[0]||{id:id,name:'Someone',c:COLORS[0]}}
-function av(f,sz){return '<span class="av" style="background:'+f.c+(sz?';width:'+sz+'px;height:'+sz+'px;font-size:'+(sz*.4)+'px':'')+'">'+esc((f.name||'?')[0].toUpperCase())+'</span>'}
+function av(f,sz){return '<span class="av" style="background:'+(f.photo?'url('+f.photo+') center/cover':f.c)+(sz?';width:'+sz+'px;height:'+sz+'px;font-size:'+(sz*.4)+'px':'')+'">'+(f.photo?'':esc((f.name||'?')[0].toUpperCase()))+'</span>'}
 function friendOpts(sel){return S.friends.map(function(f){return '<option value="'+f.id+'"'+(f.id===sel?' selected':'')+'>'+esc(f.name)+'</option>'}).join('')}
 
 /* ---------- quiet hours ---------- */
@@ -461,7 +464,7 @@ function vTalk(){
 function threadHtml(){
   if(!chatWith)return '<div class="empty" style="margin:auto;border:0">Pick a friend to start talking.</div>';
   var f=friend(chatWith),ms=S.chats[chatWith]||[];
-  return '<header><button class="btn ghost small back" data-act="back">←</button>'+av(f,40)+'<div><b>'+esc(f.name)+'</b><div class="muted" style="font-size:12px">'+(quietOn()?'You are on quiet hours. No need to answer.':'Private chat')+'</div></div></header>'+
+  return '<header><button class="btn ghost small back" data-act="back">←</button>'+av(f,40)+'<div><b>'+esc(f.name)+'</b><div class="muted" style="font-size:12px">'+(quietOn()?'You are on quiet hours. No need to answer.':(f.username?'@'+esc(f.username):'Private chat'))+'</div></div></header>'+
    '<div class="msgs" id="msgs">'+(ms.length?ms.map(function(m){return '<div class="m'+(m.f==='me'?' me':'')+'">'+(m.photo?'<img src="'+m.photo+'" alt="Shared photo">':'')+(m.kind==='letter'?'<button class="btn ghost small" data-act="read-letter" data-id="'+m.id+'">💌 Open letter</button>':(m.t?esc(m.t):''))+'<time>'+fmtTime(m.at)+'</time></div>'}).join(''):'<div class="empty">No messages yet.</div>')+'</div>'+
    '<div class="nolikes">No likes. No reactions counting. Just talk.</div>'+
    '<form class="compose" id="sendForm"><input type="text" id="msgIn" placeholder="Write to '+esc(f.name)+'" autocomplete="off" aria-label="Message"><button class="btn" type="submit">Send</button></form>';
@@ -550,7 +553,7 @@ function vPigeons(){
   var out=S.pigeons.filter(function(p){return p.dir==='out'}).sort(function(a,b){return b.at-a.at});
   return '<div class="grid g2"><div class="card stack"><h3>Send a pigeon</h3><p class="muted">A pigeon carries your handwritten note to one person. Good for invitations, a first hello, or a quiet "I am thinking of you".</p>'+
    '<div class="sky" id="sky"><div class="skynote" id="skyNote">Ready when you are</div><div class="pigeon" id="pigeon">'+PIGEON+'</div></div>'+
-   (LIVE?'<label class="f">Their Bonfire ID<input type="text" id="pigeonTo" placeholder="BNF-XXXX-XXXX" style="text-transform:uppercase"></label>':'<label class="f">To<select id="pigeonTo">'+friendOpts('')+'</select></label>')+
+   (LIVE?'<label class="f">Their Bonfire ID or @username<input type="text" id="pigeonTo" placeholder="BNF-XXXX-XXXX or @username"></label>':'<label class="f">To<select id="pigeonTo">'+friendOpts('')+'</select></label>')+
    '<label class="f">Your note<textarea id="pigeonMsg" maxlength="240" style="font-family:var(--hand);font-size:22px;line-height:1.2" placeholder="Come sit by the fire with me on Saturday.">'+esc(draft.pigeon||'')+'</textarea></label>'+
    '<button class="btn" data-act="release">🕊️ Release the pigeon</button></div>'+
    '<div class="stack"><div class="card"><h3>Arriving for you</h3><div style="margin-top:8px">'+(inc.length?inc.map(function(p){
@@ -647,8 +650,8 @@ function vMe(){
    '<div class="card stack"><h3>Your invitation</h3><div class="row" style="flex-wrap:wrap;gap:18px;align-items:center">'+qr+'<div class="stack" style="flex:1;min-width:190px"><div class="mono">Your personal ID</div><div class="idbox" id="myid">'+esc(S.id)+'</div>'+
     '<div class="row"><button class="btn small" data-act="copy" data-text="'+esc(shareText)+'">Copy invite</button><a class="btn small ghost" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(shareText)+'">Share on WhatsApp</a></div>'+
     '<div class="muted" style="font-size:13px">'+(S.vis==='nobody'?'You are invisible, so this code is the only way in. '+S.invited+' invitation'+(S.invited===1?'':'s')+' shared.':'Share it in any chat. Whoever scans it can send you a connection request.')+'</div></div></div>'+
-    '<div class="stack" style="border-top:1px solid var(--line);padding-top:14px"><b>Add someone by ID</b><div class="row" style="flex-wrap:nowrap"><input type="text" id="addId" placeholder="BNF-XXXX-XXXX" style="text-transform:uppercase" aria-label="Friend ID">'+(LIVE?'':'<input type="text" id="addName" placeholder="Their name" aria-label="Their name">')+'</div><button class="btn ghost" data-act="add-friend">Connect</button></div></div>'+
-   (LIVE?findCard():'')+
+    '<div class="stack" style="border-top:1px solid var(--line);padding-top:14px"><b>Add someone by ID or username</b><div class="row" style="flex-wrap:nowrap"><input type="text" id="addId" placeholder="'+(LIVE?'BNF-XXXX-XXXX or @username':'BNF-XXXX-XXXX')+'" aria-label="Friend ID or username">'+(LIVE?'':'<input type="text" id="addName" placeholder="Their name" aria-label="Their name">')+'</div><button class="btn ghost" data-act="add-friend">Connect</button></div></div>'+
+   (LIVE?profileCard()+findCard()+notifyCard():'')+
    '<div class="card stack"><h3>Quiet hours</h3><div class="row" style="justify-content:space-between"><div class="t"><b>'+(q?'Quiet hours are on':'Take a break')+'</b><div class="muted">'+(q?(S.quiet.until?'Until '+fmtTime(S.quiet.until):'Until you turn it off'):'Mutes alerts and dims the fire. You never owe a reply.')+'</div></div><button class="switch" data-act="quiet-toggle" aria-pressed="'+q+'" aria-label="Quiet hours"></button></div>'+
     '<div class="seg">'+[['1h','1 hour'],['3h','3 hours'],['morning','Until morning'],['manual','Until I say']].map(function(o){return '<button data-act="quiet-set" data-id="'+o[0]+'" aria-pressed="'+(q&&S.quiet.label===o[0])+'">'+o[1]+'</button>'}).join('')+'</div></div>'+
    fbCard()+
@@ -686,6 +689,12 @@ function fbCard(){
 }
 function iMe(){
   var box=$('#qr');
+  var pf=$('#profPhoto');
+  if(pf)pf.addEventListener('change',function(){
+    cropSquare(pf.files[0],128,function(d){
+      BF.updateProfile({photo:d}).then(function(){LIVE.photo=d;var h=$('#profHead');if(h){var a=h.querySelector('.av');if(a)a.outerHTML=av(myCard(),64)}toast('Profile photo updated.',true)}).catch(function(){toast('Could not save the photo. Try again.',true)});
+    });
+  });
   if(box){
     if(typeof qrcode==='function'){
       try{
@@ -755,9 +764,9 @@ document.addEventListener('click',function(e){
      if(!msg){toast('Write a note for the pigeon first.',true);break}
      var pg=$('#pigeon'),sn=$('#skyNote');
      if(LIVE){
-       if(!/^BNF-[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(to2)){toast('IDs look like BNF-AB12-CD34.',true);break}
+       if(!validTarget(to2)){toast('Enter an ID like BNF-AB12-CD34 or a username like @maya.',true);break}
        t.disabled=true;
-       BF.sendPigeon(to2.toUpperCase(),msg).then(function(tg){
+       BF.sendPigeon(normTarget(to2),msg).then(function(tg){
          pg.classList.remove('fly');void pg.offsetWidth;pg.classList.add('fly');sn.textContent='Flying to '+tg.name+'…';
          setTimeout(function(){S.pigeons.push({id:uid(),dir:'out',who:tg.uid,toName:tg.name,msg:msg,at:Date.now(),state:'delivered'});draft.pigeon='';save();toast('Your pigeon reached '+tg.name+'.',true);if(cur==='keepsakes'&&sub==='pigeons')render()},4500);
        }).catch(function(e){t.disabled=false;toast(pigeonError(e),true)});
@@ -829,7 +838,8 @@ document.addEventListener('click',function(e){
      var done=function(){toast('Copied. Paste it into any chat.',true);if(S.vis==='nobody')render()};
      try{navigator.clipboard.writeText(tx3).then(done,function(){toast('Select and copy the ID above.',true)})}catch(err){toast('Select and copy the ID above.',true)}break}
    case 'add-friend':{
-     var fid=($('#addId').value||'').trim().toUpperCase(),fn=($('#addName').value||'').trim();
+     if(LIVE){var rawT=($('#addId').value||'').trim();if(!validTarget(rawT)){toast('Enter an ID like BNF-AB12-CD34 or a username like @maya.',true);break}BF.sendPigeon(normTarget(rawT),'').then(function(tg){toast('Invitation sent to '+tg.name+'.',true);$('#addId').value=''}).catch(function(e){toast(pigeonError(e),true)});break}
+     var fid=($('#addId').value||'').trim().toUpperCase(),fn=($('#addName')?$('#addName').value:'').trim();
      if(!/^BNF-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(fid)){toast('IDs look like BNF-AB12-CD34.',true);break}
      if(fid===S.id){toast('That is your own ID.',true);break}
      if(LIVE){BF.sendPigeon(fid,'').then(function(tg){toast('Invitation sent to '+tg.name+'.',true);$('#addId').value=''}).catch(function(e){toast(pigeonError(e),true)});break}
@@ -859,12 +869,30 @@ document.addEventListener('click',function(e){
      var fq=$('#findQ').value;
      BF.search(fq).then(function(list){
        list=list.filter(function(x){return !S.friends.some(function(f){return f.id===x.uid})});
-       $('#findRes').innerHTML=list.length?list.map(function(x){return '<div class="item"><div class="t"><b>'+esc(x.name)+'</b></div><button class="btn small" data-act="invite" data-id="'+esc(x.bondId)+'">Send a pigeon</button></div>'}).join(''):'<div class="muted">No one found. People who chose to be invisible will not appear. Ask them for their ID or QR code.</div>';
+       $('#findRes').innerHTML=list.length?list.map(function(x){return '<div class="item"><div class="t"><b>'+esc(x.name)+'</b>'+(x.username?'<div class="muted">@'+esc(x.username)+'</div>':'')+'</div><button class="btn small" data-act="invite" data-id="'+esc(x.bondId)+'">Send a pigeon</button></div>'}).join(''):'<div class="muted">No one found. People who chose to be invisible will not appear. Ask them for their ID or QR code.</div>';
      }).catch(function(){toast('Search did not work. Try again.',true)});break}
    case 'invite':BF.sendPigeon(id,'').then(function(tg){toast('Invitation sent to '+tg.name+'.',true)}).catch(function(e){toast(pigeonError(e),true)});break;
    case 'join-send':{
      var jn=$('#joinNote')?$('#joinNote').value:'';
      BF.sendPigeon(id,jn).then(function(tg){closeModal();toast('Your pigeon is on its way to '+tg.name+'.',true)}).catch(function(e){toast(pigeonError(e),true)});break}
+   case 'save-name':{
+     var nn=($('#profName').value||'').trim();
+     if(!nn){toast('Enter a name.',true);break}
+     BF.updateProfile({name:nn}).then(function(){LIVE.name=nn;S.name=nn;toast('Name saved.',true)}).catch(function(){toast('Could not save the name. Try again.',true)});break}
+   case 'save-username':{
+     var un=($('#profUser').value||'').trim();
+     $('#userMsg').textContent='Checking…';
+     BF.setUsername(un).then(function(){LIVE.username=un.toLowerCase().replace(/^@/,'');S.username=LIVE.username;$('#userMsg').textContent='Saved. You are @'+LIVE.username+'.';toast('Username saved.',true)}).catch(function(e){$('#userMsg').textContent=usernameError(e)});break}
+   case 'pick-username':{
+     var pu=($('#pickUser').value||'').trim();
+     BF.setUsername(pu).then(function(){LIVE.username=pu.toLowerCase().replace(/^@/,'');closeModal();toast('You are @'+LIVE.username+'.',true);if(cur==='me')render()}).catch(function(e){$('#pickMsg').textContent=usernameError(e)});break}
+   case 'notify-on':
+     if(!notifySupported()){toast('Notifications are not supported here.',true);break}
+     Notification.requestPermission().then(function(r){
+       if(r==='granted'){S.notify=true;save();render();toast('Notifications are on.',true)}
+       else{render();toast('Notifications were not allowed.',true)}
+     });break;
+   case 'notify-off':S.notify=false;save();render();break;
    case 'leave':askFeedback(true);break;
    case 'fb-send':{
      var ans=($('#fbA').value||'').trim();
@@ -899,7 +927,7 @@ function renderGate(msg){
   $('#banner').innerHTML='';
   $('#view').innerHTML='<div class="gatebox"><div class="flame"></div><h1>Bonfire</h1><p class="muted">A private place for the people you choose. You stay invisible until you decide otherwise.</p><button class="btn" data-act="signin">Continue with Google</button><button class="btn ghost small" data-act="demo">Look around in demo mode</button>'+(msg?'<p style="color:var(--flame)">'+esc(msg)+'</p>':'')+'</div>';
 }
-function stopLive(){for(var k in live.unsubs){try{live.unsubs[k]()}catch(e){}}live={inbox:[],chats:[],msgs:{},unsubs:{}}}
+function stopLive(){for(var k in live.unsubs){try{live.unsubs[k]()}catch(e){}}live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{}}}
 function bootLive(){
   document.body.classList.add('gate');
   $('#view').innerHTML='<div class="gatebox"><div class="flame"></div><p class="muted">Lighting the fire…</p></div>';
@@ -910,13 +938,19 @@ function bootLive(){
 }
 function startLive(user,p){
   stopLive();
-  LIVE={uid:user.uid,name:p.name,bondId:p.bondId};
+  LIVE={uid:user.uid,name:p.name,bondId:p.bondId,username:p.username||'',photo:p.photo||''};
   S=loadLive(user.uid);S.id=p.bondId;S.name=p.name;S.vis=p.vis||'nobody';S.allowed=p.allowed||[];
   document.body.classList.remove('gate');
-  live.unsubs.inbox=BF.onInbox(function(list){live.inbox=list;syncLive()});
+  live.unsubs.inbox=BF.onInbox(function(list){
+    var prev=live.inboxSeen;
+    if(prev)list.forEach(function(r){if(!prev[r.uid]){toast('A pigeon arrived from '+r.fromName+'.');pushNote('Pigeon from '+r.fromName,r.note||'They would like to connect.','pigeon-'+r.uid)}});
+    live.inboxSeen={};list.forEach(function(r){live.inboxSeen[r.uid]=1});
+    live.inbox=list;syncLive()});
   live.unsubs.chats=BF.onChats(function(list){
     live.chats=list;
     list.forEach(function(c){
+      var other=c.members.filter(function(m){return m!==user.uid})[0];
+      if(other&&!live.unsubs['p'+other])live.unsubs['p'+other]=BF.onProfile(other,function(pr){live.profiles[other]=pr;syncLive()});
       if(live.unsubs['m'+c.id])return;
       live.unsubs['m'+c.id]=BF.onMessages(c.id,function(ms){var prev=live.msgs[c.id];live.msgs[c.id]=ms;announce(c,prev,ms);syncLive()});
     });
@@ -924,6 +958,7 @@ function startLive(user,p){
   });
   route();
   handleJoin();
+  if(!LIVE.username)setTimeout(askUsername,600);
 }
 function announce(c,prev,ms){
   if(!prev||ms.length<=prev.length)return;
@@ -932,14 +967,18 @@ function announce(c,prev,ms){
   if(!fresh.length)return;
   if(cur==='talk'&&chatWith===other&&!document.hidden)return;
   var nm=(c.names&&c.names[other])||'A friend';
-  toast(nm+(fresh[fresh.length-1].kind==='letter'?' sent you a letter.':' sent a message.'));
+  var lastM=fresh[fresh.length-1];
+  var pr=live.profiles[other];if(pr&&pr.name)nm=pr.name;
+  toast(nm+(lastM.kind==='letter'?' sent you a letter.':' sent a message.'));
+  pushNote(nm,lastM.kind==='letter'?'Sent you a letter.':String(lastM.text||'').slice(0,120),'chat-'+c.id);
 }
 function syncLive(){
   if(!LIVE)return;
   var me=LIVE.uid,friends=[],chats={},letters=[],unread={},lastAt={};
   live.chats.forEach(function(c){
     var other=c.members.filter(function(m){return m!==me})[0];if(!other)return;
-    friends.push({id:other,name:(c.names&&c.names[other])||'Friend',c:colorFor(other),chatId:c.id});
+    var pr=live.profiles[other]||{};
+    friends.push({id:other,name:pr.name||(c.names&&c.names[other])||'Friend',username:pr.username||'',photo:pr.photo||'',c:colorFor(other),chatId:c.id});
     var arr=[];
     if(c.opening&&c.opening.text)arr.push({f:c.opening.from===me?'me':'them',t:'🕊️ '+c.opening.text,at:c.at||0,op:1});
     (live.msgs[c.id]||[]).forEach(function(m){
@@ -956,11 +995,55 @@ function syncLive(){
   S.friends=friends;S.chats=chats;S.letters=letters;S.unread=unread;
   S.pigeons=S.pigeons.filter(function(p){return p.dir==='out'}).concat(live.inbox.map(function(r){return {id:r.uid,dir:'in',who:r.uid,fname:r.fromName,msg:r.note||'They would like to connect.',at:r.at,state:'new'}}));
   save();
+  var tot=totalUnread();
+  try{document.title=(tot?'('+tot+') ':'')+'Bonfire';if(navigator.setAppBadge){tot&&!quietOn()?navigator.setAppBadge(tot):navigator.clearAppBadge()}}catch(e){}
   renderNav();applyQuiet();
   if(cur==='talk'&&chatWith){var inp=$('#msgIn'),v=inp?inp.value:'';refreshThread();var i2=$('#msgIn');if(i2&&v)i2.value=v;return}
   var ae=document.activeElement;
   if(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)&&$('#view').contains(ae))return;
   if(cur==='talk'||cur==='home'||(cur==='keepsakes'&&(sub==='pigeons'||sub==='letters')))render();
+}
+function validTarget(x){x=String(x||'').trim();return /^BNF-[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(x)||/^@?[a-z0-9._]{3,20}$/i.test(x)}
+function normTarget(x){x=String(x).trim();return /^BNF-/i.test(x)?x.toUpperCase():x.replace(/^@/,'').toLowerCase()}
+function usernameError(e){var c=e&&e.code;return c==='invalid'?'Use 3 to 20 letters, numbers, dots or underscores.':(c==='taken'||c==='permission-denied')?'That username is already taken. Try another.':'Could not save that username. Try again.'}
+function cropSquare(file,size,cb){
+  if(!file)return;
+  var r=new FileReader();
+  r.onload=function(){
+    var im=new Image();
+    im.onload=function(){
+      var m=Math.min(im.width,im.height),sx=(im.width-m)/2,sy=(im.height-m)/2,c=document.createElement('canvas');
+      c.width=c.height=size;c.getContext('2d').drawImage(im,sx,sy,m,m,0,0,size,size);
+      cb(c.toDataURL('image/jpeg',.82));
+    };
+    im.onerror=function(){toast('That file could not be read as an image.',true)};
+    im.src=r.result;
+  };
+  r.readAsDataURL(file);
+}
+function myCard(){return {name:LIVE.name,photo:LIVE.photo,c:colorFor(LIVE.uid)}}
+function profileCard(){
+  return '<div class="card stack"><h3>Your profile</h3><div class="row" style="gap:16px;flex-wrap:nowrap" id="profHead">'+av(myCard(),64)+'<label class="f" style="flex:1">Profile photo<input type="file" id="profPhoto" accept="image/*"></label></div>'+
+   '<label class="f">Display name<input type="text" id="profName" maxlength="40" value="'+esc(LIVE.name)+'"></label><div class="row"><button class="btn ghost small" data-act="save-name">Save name</button></div>'+
+   '<label class="f">Username (one person per name)<span class="at"><span>@</span><input type="text" id="profUser" maxlength="20" autocapitalize="none" autocomplete="off" placeholder="choose a username" value="'+esc(LIVE.username||'')+'"></span></label>'+
+   '<div class="row"><button class="btn ghost small" data-act="save-username">Claim username</button></div><div class="muted" id="userMsg" style="font-size:13px">'+(LIVE.username?'Friends can find you at @'+esc(LIVE.username)+' when you are visible to everyone.':'Pick a username so friends can find you easily.')+'</div></div>';
+}
+function notifySupported(){return 'Notification' in window}
+function notifyCard(){
+  var perm=notifySupported()?Notification.permission:'unsupported',on=S.notify&&perm==='granted';
+  var msg=perm==='unsupported'?'This browser does not support notifications. On iPhone, add Bonfire to your Home Screen first.':perm==='denied'?'Notifications are blocked. Allow them for this site in your browser settings.':on?'On. You will get an alert for new messages, letters and pigeons while Bonfire is open or running in the background.':'Get an alert when a friend writes to you.';
+  return '<div class="card stack"><h3>Notifications</h3><p class="muted">'+msg+'</p>'+(perm==='unsupported'||perm==='denied'?'':on?'<button class="btn ghost small" data-act="notify-off">Turn off</button>':'<button class="btn small" data-act="notify-on">Turn on notifications</button>')+'<p class="muted" style="font-size:13px">Quiet hours silence these too. Alerts while the app is fully closed need an extra server setup that is not turned on yet.</p></div>';
+}
+function pushNote(title,body,tag){
+  if(!LIVE||!S.notify||!notifySupported()||Notification.permission!=='granted'||quietOn()||!document.hidden)return;
+  var opts={body:body,icon:'icons/icon-192.png',badge:'icons/icon-192.png',tag:tag};
+  if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){
+    navigator.serviceWorker.getRegistration().then(function(r){if(r)return r.showNotification(title,opts);new Notification(title,opts)}).catch(function(){try{new Notification(title,opts)}catch(e){}});
+  }else{try{new Notification(title,opts)}catch(e){}}
+}
+function askUsername(){
+  if(!LIVE||LIVE.username||$('#modal').classList.contains('on'))return;
+  openModal('<div class="mono">Welcome</div><div class="q">Choose your username</div><p class="muted" style="margin-bottom:10px">It is unique, like on Instagram. Only you can have it.</p><span class="at"><span>@</span><input type="text" id="pickUser" maxlength="20" autocapitalize="none" autocomplete="off" placeholder="yourname"></span><div id="pickMsg" style="margin-top:8px;color:var(--flame);font-size:13px"></div><div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn ghost" data-act="close">Later</button><button class="btn" data-act="pick-username">Claim it</button></div>');
 }
 function handleJoin(){
   if(!JOIN)return;
