@@ -585,6 +585,36 @@ h1+p,.view-sub,.lede{color:var(--muted);max-width:52ch}
   .hero canvas{width:110px;height:140px}
   .hero-txt{max-width:64%;padding:20px}
 }
+
+/* music */
+.tracks.pl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.tracks.pl li{display:flex;align-items:center;gap:10px;padding:6px 0;margin:0}
+.tracks.pl li::marker{content:''}
+.pbtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface2);color:var(--fg);display:grid;place-items:center;flex:none;cursor:pointer;padding:0}
+.pbtn .pi svg{width:15px;height:15px;fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.pbtn.on{background:var(--ember);color:#1a0d06;border-color:transparent}
+.pbtn.load{opacity:.5}
+.tt{display:flex;flex-direction:column;min-width:0;flex:1}.tt b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tt small{color:var(--muted);font-size:12px}
+.yt{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.resl{display:flex;flex-direction:column;gap:2px}
+.res{display:flex;align-items:center;gap:12px;padding:8px;border-radius:12px;background:none;border:0;color:var(--fg);text-align:left;width:100%;cursor:pointer}
+.res:hover{background:var(--surface2)}
+.res img,.res .noart{width:40px;height:40px;border-radius:8px;flex:none;background:var(--surface2)}
+.res .plus svg{width:18px;height:18px;fill:none;stroke:var(--ember);stroke-width:2}
+.tapemsg{display:flex;flex-direction:column;gap:8px;min-width:230px}
+.tapehead{display:flex;align-items:center;gap:8px}.tapehead svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+.m.me .pbtn{background:rgba(0,0,0,.18);color:#1a0d06;border-color:transparent}.m.me .pbtn.on{background:#1a0d06;color:var(--ember)}
+.m.me .tt small,.m.me .tnote{color:rgba(26,13,6,.65)}.m.me .yt{color:#1a0d06;border-color:rgba(0,0,0,.25)}
+.m.me .btn{background:#1a0d06;color:var(--ember)}
+.tnote{font-size:11px;color:var(--muted)}
+
+.m:has(.tapemsg),.m.me:has(.tapemsg){background:var(--surface2);color:var(--fg);border:1px solid var(--line)}
+.m.me .tapemsg .pbtn{background:var(--surface);color:var(--fg);border:1px solid var(--line)}
+.m.me .tapemsg .pbtn.on{background:var(--ember);color:#1a0d06}
+.m.me .tapemsg .tt small,.m.me .tapemsg .tnote{color:var(--muted)}
+.m.me .tapemsg .yt{color:var(--muted);border-color:var(--line)}
+.m.me .tapemsg .btn{background:var(--ember);color:#1a0d06}
+.tapemsg .tt b{color:var(--fg)}
 </style>
 
 <body>
@@ -737,7 +767,7 @@ function render(){
   renderNav();applyQuiet();
   var fn={home:vHome,talk:vTalk,keepsakes:vKeep,fireplace:vFire,mixtapes:vTapes,me:vMe}[cur];
   $('#view').innerHTML=fn();
-  var init={home:iHome,talk:iTalk,keepsakes:iKeep,fireplace:iFire,me:iMe}[cur];
+  var init={home:iHome,mixtapes:iTapes,talk:iTalk,keepsakes:iKeep,fireplace:iFire,me:iMe}[cur];
   if(init)init();
 }
 
@@ -752,6 +782,8 @@ function ico(n){
     bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
     tape:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>',
+    play:'<path d="M7 4.5v15l13-7.5z"/>',
+    pause:'<path d="M8 5v14M16 5v14"/>',
     moon:'<path d="M20 14A8 8 0 1 1 10 4a6.5 6.5 0 0 0 10 10z"/>',
     flame:'<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-9z"/>',
     lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
@@ -797,7 +829,7 @@ function vHome(){
   var rows=S.friends.map(function(f){return {f:f,m:lastMsg(f.id)}}).sort(function(a,b){return ((b.m&&b.m.at)||0)-((a.m&&a.m.at)||0)}).slice(0,5);
   var chats='<section class="chatsec"><div class="shead"><h3>Conversations</h3>'+(n?'<button class="link" data-act="goto-talk">See all</button>':'')+'</div><div class="card chatlist">'+(rows.length?rows.map(function(r){
     var f=r.f,m=r.m,un=S.unread[f.id]||0;
-    return '<button class="crow" data-act="chat" data-id="'+f.id+'">'+av(f,46)+'<span class="ct"><span class="cn"><b>'+esc(f.name)+'</b><time>'+(m?relTime(m.at):'')+'</time></span><span class="cp'+(un&&!q?' un':'')+'">'+esc(m?(m.f==='me'?'You: ':'')+(m.photo?'Sent a photo':(m.kind==='letter'?'Sent a letter':m.t)):'Say hello')+'</span></span>'+(un&&!q?'<i class="badge solid">'+un+'</i>':'')+'</button>';
+    return '<button class="crow" data-act="chat" data-id="'+f.id+'">'+av(f,46)+'<span class="ct"><span class="cn"><b>'+esc(f.name)+'</b><time>'+(m?relTime(m.at):'')+'</time></span><span class="cp'+(un&&!q?' un':'')+'">'+esc(m?(m.f==='me'?'You: ':'')+(m.photo?'Sent a photo':(m.kind==='letter'?'Sent a letter':(isTape(m.t)?'Sent a mixtape':m.t))):'Say hello')+'</span></span>'+(un&&!q?'<i class="badge solid">'+un+'</i>':'')+'</button>';
   }).join(''):'<div class="empty" style="border:0">No conversations yet. Share your QR code from Me to bring someone in.</div>')+'</div></section>';
   /* shelf */
   var shelf='';
@@ -853,7 +885,7 @@ function lastMsg(id){var c=S.chats[id]||[];return c.length?c[c.length-1]:null}
 function vTalk(){
   var list=S.friends.map(function(f){
     var m=lastMsg(f.id),un=S.unread[f.id]||0;
-    return '<button class="who" data-act="chat" data-id="'+f.id+'"'+(chatWith===f.id?' aria-current="true"':'')+'>'+av(f)+'<span class="t"><b>'+esc(f.name)+'</b><small>'+(m?(m.f==='me'?'You: ':'')+esc(m.photo?'Sent a photo':(m.kind==='letter'?'Sent a letter':m.t)):'Say hello')+'</small></span>'+(un&&!quietOn()?'<span class="dot" style="min-width:18px;height:18px;border-radius:9px;background:var(--ember);color:#1a0d05;font-size:11px;font-weight:700;display:grid;place-items:center">'+un+'</span>':'')+'</button>';
+    return '<button class="who" data-act="chat" data-id="'+f.id+'"'+(chatWith===f.id?' aria-current="true"':'')+'>'+av(f)+'<span class="t"><b>'+esc(f.name)+'</b><small>'+(m?(m.f==='me'?'You: ':'')+esc(m.photo?'Sent a photo':(m.kind==='letter'?'Sent a letter':(isTape(m.t)?'Sent a mixtape':m.t))):'Say hello')+'</small></span>'+(un&&!quietOn()?'<span class="dot" style="min-width:18px;height:18px;border-radius:9px;background:var(--ember);color:#1a0d05;font-size:11px;font-weight:700;display:grid;place-items:center">'+un+'</span>':'')+'</button>';
   }).join('');
   if(!list)list='<div class="empty">No connections yet. Share your QR code from the Me tab.</div>';
   return '<div class="head"><div><h1>Talk</h1><p>Private conversations with the people you connected with. Nothing here is public.</p></div></div>'+
@@ -873,7 +905,7 @@ function msgsHtml(ms){
     var nx=ms[i+1];
     var first=!prev||prev.f!==m.f||(m.at-prev.at>GAP);
     var last=!nx||nx.f!==m.f||(nx.at-m.at>GAP)||new Date(nx.at).toDateString()!==day;
-    var body=(m.kind==='pigeon'?'<span class="pgl">Pigeon note</span>':'')+(m.photo?'<img src="'+m.photo+'" alt="Shared photo">':'')+(m.kind==='letter'?'<button class="btn ghost small" data-act="read-letter" data-id="'+m.id+'">'+ico('mail')+' Open letter</button>':(m.t?esc(m.t):''));
+    var body=(m.kind==='pigeon'?'<span class="pgl">Pigeon note</span>':'')+(m.photo?'<img src="'+m.photo+'" alt="Shared photo">':'')+(m.kind==='letter'?'<button class="btn ghost small" data-act="read-letter" data-id="'+m.id+'">'+ico('mail')+' Open letter</button>':(isTape(m.t)?tapeCard(parseTape(m.t)):(m.t?esc(m.t):'')));
     out+='<div class="m'+(m.f==='me'?' me':'')+(first?' first':'')+(last?' last':'')+'">'+body+(last?'<time>'+fmtTime(m.at)+'</time>':'')+'</div>';
     prev=m;
   });
@@ -912,7 +944,7 @@ function scheduleReply(id){
     else{S.unread[id]=(S.unread[id]||0)+1;save();renderNav();toast(friend(id).name+' replied.');if(cur==='home'||cur==='talk')render()}
   },1800+Math.random()*2200);
 }
-function refreshThread(){var t=$('#thread');if(!t)return;t.innerHTML=threadHtml();var c=$('#chat');if(c)c.classList.toggle('open',!!chatWith);iTalk();var lst=$('#chat .list');if(lst){lst.innerHTML=S.friends.map(function(f){var m=lastMsg(f.id);return '<button class="who" data-act="chat" data-id="'+f.id+'"'+(chatWith===f.id?' aria-current="true"':'')+'>'+av(f)+'<span class="t"><b>'+esc(f.name)+'</b><small>'+(m?(m.f==='me'?'You: ':'')+esc(m.photo?'Sent a photo':(m.kind==='letter'?'Sent a letter':m.t)):'Say hello')+'</small></span></button>'}).join('')}}
+function refreshThread(){var t=$('#thread');if(!t)return;t.innerHTML=threadHtml();var c=$('#chat');if(c)c.classList.toggle('open',!!chatWith);iTalk();var lst=$('#chat .list');if(lst){lst.innerHTML=S.friends.map(function(f){var m=lastMsg(f.id);return '<button class="who" data-act="chat" data-id="'+f.id+'"'+(chatWith===f.id?' aria-current="true"':'')+'>'+av(f)+'<span class="t"><b>'+esc(f.name)+'</b><small>'+(m?(m.f==='me'?'You: ':'')+esc(m.photo?'Sent a photo':(m.kind==='letter'?'Sent a letter':(isTape(m.t)?'Sent a mixtape':m.t))):'Say hello')+'</small></span></button>'}).join('')}}
 
 /* ---------- Keepsakes: photos, pigeons, letters, capsules ---------- */
 function vKeep(){
@@ -1031,19 +1063,79 @@ function iFire(){
 }
 
 /* ---------- 10. Music and mixtapes ---------- */
+/* ---------- Music: 30-second previews via the iTunes Search API (no key needed) ---------- */
+var TAPE_TAG='BFTAPE1 ',audioEl=null,playing=null,prevCache={},tapeQueue=[];
+function isTape(t){return typeof t==='string'&&t.indexOf(TAPE_TAG)===0}
+function parseTape(t){try{var d=JSON.parse(t.slice(TAPE_TAG.length));d.tracks=(d.tracks||[]).slice(0,12);return d}catch(e){return {title:'Mixtape',tracks:[]}}}
+function encodeTape(title,tracks){return TAPE_TAG+JSON.stringify({title:title,tracks:tracks.slice(0,12).map(function(x){return {i:x.i||0,t:x.t,a:x.a}})})}
+function ytLink(x){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(x.t+' '+(x.a&&x.a!=='Unknown'?x.a:''))}
+function trackRows(tracks,wrap){
+  return '<ol class="tracks pl">'+tracks.map(function(x,k){
+    return '<li><button class="pbtn" data-act="play-track" data-i="'+(x.i||0)+'" data-q="'+esc(x.t+' '+(x.a==='Unknown'?'':x.a))+'" aria-label="Play '+esc(x.t)+'"><span class="pi">'+ico('play')+'</span></button><span class="tt"><b>'+esc(x.t)+'</b><small>'+esc(x.a)+'</small></span><a class="yt" target="_blank" rel="noopener" href="'+ytLink(x)+'" title="Full song">Full</a></li>'}).join('')+'</ol>';
+}
+function tapeCard(d){
+  return '<div class="tapemsg"><div class="tapehead">'+ico('tape')+'<b>'+esc(d.title||'Mixtape')+'</b></div>'+trackRows(d.tracks)+
+   '<button class="btn small" data-act="play-all">'+ico('play')+' Play all</button><div class="tnote">30-second previews</div></div>';
+}
+function setPlayUi(){
+  [].forEach.call(document.querySelectorAll('.pbtn'),function(b){
+    var on=playing&&b===playing;b.classList.toggle('on',!!on);
+    b.querySelector('.pi').innerHTML=ico(on&&audioEl&&!audioEl.paused?'pause':'play');
+  });
+}
+function lookupPreview(i,q){
+  var key=i||q;if(prevCache[key])return Promise.resolve(prevCache[key]);
+  var url=i?'https://itunes.apple.com/lookup?id='+i:'https://itunes.apple.com/search?media=music&entity=song&limit=1&term='+encodeURIComponent(q);
+  return fetch(url).then(function(r){return r.json()}).then(function(d){
+    var r=(d.results||[]).filter(function(x){return x.previewUrl})[0];
+    if(!r)throw new Error('none');prevCache[key]=r.previewUrl;return r.previewUrl;
+  });
+}
+function playTrack(btn){
+  if(!audioEl){audioEl=new Audio();audioEl.preload='none';
+    audioEl.addEventListener('ended',function(){setPlayUi();if(tapeQueue.length){var n=tapeQueue.shift();playTrack(n)}});
+    audioEl.addEventListener('pause',setPlayUi);audioEl.addEventListener('play',setPlayUi);}
+  if(playing===btn&&!audioEl.paused){audioEl.pause();return}
+  if(playing===btn&&audioEl.paused&&audioEl.src){audioEl.play();return}
+  audioEl.pause();playing=btn;setPlayUi();btn.classList.add('load');
+  lookupPreview(+btn.getAttribute('data-i')||0,btn.getAttribute('data-q')).then(function(u){
+    if(playing!==btn)return;btn.classList.remove('load');audioEl.src=u;
+    return audioEl.play();
+  }).catch(function(){
+    btn.classList.remove('load');playing=null;setPlayUi();
+    toast('No preview for this one. Tap Full to open it.',true);
+    if(tapeQueue.length){var n=tapeQueue.shift();playTrack(n)}
+  });
+}
+var searchTimer=null,lastRes=[];
+function searchSongs(q){
+  var box=$('#trkRes');if(!box)return;
+  if(q.length<2){box.innerHTML='';return}
+  box.innerHTML='<div class="muted" style="padding:8px 2px">Searching…</div>';
+  fetch('https://itunes.apple.com/search?media=music&entity=song&limit=6&term='+encodeURIComponent(q)).then(function(r){return r.json()}).then(function(d){
+    lastRes=(d.results||[]).filter(function(x){return x.trackName}).map(function(x){return {i:x.trackId,t:x.trackName,a:x.artistName,art:(x.artworkUrl60||''),p:!!x.previewUrl}});
+    var b=$('#trkRes');if(!b)return;
+    b.innerHTML=lastRes.length?lastRes.map(function(x,k){return '<button class="res" data-act="pick-track" data-id="'+k+'">'+(x.art?'<img src="'+esc(x.art)+'" alt="">':'<span class="noart"></span>')+'<span class="tt"><b>'+esc(x.t)+'</b><small>'+esc(x.a)+'</small></span><span class="plus">'+ico('plus')+'</span></button>'}).join(''):'<div class="muted" style="padding:8px 2px">Nothing found. You can add it as typed.</div>';
+  }).catch(function(){var b=$('#trkRes');if(b)b.innerHTML='<div class="muted" style="padding:8px 2px">Search needs internet. You can still add it as typed.</div>'});
+}
+function iTapes(){
+  var i=$('#trkT');
+  if(i)i.addEventListener('input',function(){clearTimeout(searchTimer);var v=i.value.trim();searchTimer=setTimeout(function(){searchSongs(v)},350)});
+}
 function vTapes(){
   var cards=S.tapes.slice().sort(function(a,b){return b.at-a.at}).map(function(t){
     var by=t.from==='me'?'You':friend(t.from).name;
     return '<div class="tape"><div class="cass"><div class="lab"><small>Side A · from '+esc(by)+'</small>'+esc(t.title)+'</div><div class="win"><i></i><i></i></div></div>'+
-     '<ol class="tracks">'+t.tracks.map(function(x){return '<li>'+esc(x.t)+' <span>· '+esc(x.a)+'</span></li>'}).join('')+'</ol>'+
+     trackRows(t.tracks)+'<div class="row"><button class="btn small ghost" data-act="play-all">'+ico('play')+' Play all</button></div>'+
      '<div class="row">'+(t.from==='me'?'<select data-tape="'+t.id+'" style="flex:1" aria-label="Hand to">'+friendOpts('')+'</select><button class="btn small" data-act="hand-tape" data-id="'+t.id+'">Hand over</button>':'<span class="tag">Received</span>')+(t.ex?'<span class="tag">Example</span>':'')+'</div></div>';
   }).join('');
   var rows=(draft.tracks||[]).map(function(x,i){return '<li>'+esc(x.t)+' <span class="muted">· '+esc(x.a)+'</span> <button class="btn ghost small" data-act="rm-track" data-id="'+i+'" aria-label="Remove track">×</button></li>'}).join('');
-  return '<div class="head"><div><h1>Mixtapes</h1><p>Make a tape of songs for one person and hand it over. The tape keeps the list. You play the songs in your own music app.</p></div></div>'+liveNote()+
+  return '<div class="head"><div><h1>Mixtapes</h1><p>Search real songs, build a tape and hand it over. Your friend can play a 30-second preview of every song right inside the chat.</p></div></div>'+liveNote()+
    '<div class="grid g2"><div class="card stack"><h3>Record a mixtape</h3>'+
    '<label class="f">Tape title<input type="text" id="tapeTitle" maxlength="30" placeholder="Long drive, windows down" value="'+esc(draft.tapeTitle||'')+'"></label>'+
-   '<div class="row" style="flex-wrap:nowrap"><label class="f" style="flex:1">Song<input type="text" id="trkT" placeholder="Song name"></label><label class="f" style="flex:1">Artist<input type="text" id="trkA" placeholder="Artist"></label></div>'+
-   '<button class="btn ghost" data-act="add-track">Add song</button>'+
+   '<label class="f">Find a song<input type="text" id="trkT" autocomplete="off" placeholder="Search a song or artist"></label>'+
+   '<div id="trkRes" class="resl"></div>'+
+   '<button class="btn ghost small" data-act="add-track">Add what I typed</button>'+
    '<ol class="tracks" id="trkList">'+(rows||'<li class="muted" style="list-style:none;margin-left:-20px">No songs yet.</li>')+'</ol>'+
    '<button class="btn" data-act="save-tape">Finish the tape</button></div>'+
    '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">'+cards+'</div></div>';
@@ -1239,9 +1331,12 @@ document.addEventListener('click',function(e){
      if(!ft&&!draft.fire){toast('Add a moment or a photo.',true);break}
      S.spaces[S.activeSpace].items.push({id:uid(),by:'me',kind:draft.fire?'photo':'note',text:ft||'A moment',src:draft.fire||'',at:Date.now()});draft.fire=null;save();render();toast('Added to the fire.',true);break}
    case 'add-track':{
-     var tt=($('#trkT').value||'').trim(),ta=($('#trkA').value||'').trim();
+     var tt=($('#trkT').value||'').trim(),ta='';
      if(!tt){toast('Type a song name.',true);break}
-     draft.tapeTitle=$('#tapeTitle').value;(draft.tracks=draft.tracks||[]).push({t:tt,a:ta||'Unknown'});render();break}
+     draft.tapeTitle=$('#tapeTitle').value;(draft.tracks=draft.tracks||[]).push({i:0,t:tt,a:ta||'Unknown'});render();break}
+   case 'pick-track':{var rs=lastRes[+id];if(!rs)break;draft.tapeTitle=$('#tapeTitle').value;draft.tracks=draft.tracks||[];if(draft.tracks.length>=12){toast('A tape holds 12 songs.',true);break}draft.tracks.push({i:rs.i,t:rs.t,a:rs.a});render();break}
+   case 'play-track':playTrack(t);break;
+   case 'play-all':{var wrap=t.closest('.tape,.tapemsg');if(!wrap)break;var bs=[].slice.call(wrap.querySelectorAll('.pbtn'));if(!bs.length)break;tapeQueue=bs.slice(1);playTrack(bs[0]);break}
    case 'rm-track':draft.tapeTitle=$('#tapeTitle').value;draft.tracks.splice(+id,1);render();break;
    case 'save-tape':{
      var tn=($('#tapeTitle').value||'').trim();
@@ -1250,7 +1345,7 @@ document.addEventListener('click',function(e){
    case 'hand-tape':{
      var sel=document.querySelector('[data-tape="'+id+'"]'),tp=S.tapes.filter(function(x){return x.id===id})[0];
      if(!sel||!sel.value){toast('Connect with a friend first.',true);break}
-     var mt='I made you a mixtape: "'+tp.title+'"\n'+tp.tracks.map(function(x){return '• '+x.t+' – '+x.a}).join('\n');
+     var mt=encodeTape(tp.title,tp.tracks);
      if(LIVE){BF.sendMessage(friend(sel.value).chatId,{text:mt}).then(function(){toast('Handed to '+friend(sel.value).name+'.',true)}).catch(function(){toast('Could not send. Try again.',true)});break}
      sendMsg(sel.value,{f:'me',t:mt,at:Date.now()});toast('Handed to '+friend(sel.value).name+'.',true);break}
    case 'copy':{
@@ -1391,7 +1486,7 @@ function announce(c,prev,ms){
   var lastM=fresh[fresh.length-1];
   var pr=live.profiles[other];if(pr&&pr.name)nm=pr.name;
   toast(nm+(lastM.kind==='letter'?' sent you a letter.':' sent a message.'));
-  pushNote(nm,lastM.kind==='letter'?'Sent you a letter.':String(lastM.text||'').slice(0,120),'chat-'+c.id);
+  pushNote(nm,lastM.kind==='letter'?'Sent you a letter.':(isTape(lastM.text)?'Sent you a mixtape.':String(lastM.text||'').slice(0,120)),'chat-'+c.id);
 }
 function syncLive(){
   if(!LIVE)return;
