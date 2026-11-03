@@ -304,6 +304,87 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ember);b
 }
 .mbrand{display:none;font-family:var(--display);font-size:1.3rem;align-items:center;gap:8px;margin-bottom:4px}
 .mbrand i{width:9px;height:9px;border-radius:50%;background:var(--ember);box-shadow:0 0 12px var(--ember)}
+
+/* ---------- upgrade: Me, Keepsakes, Fireplace, Mixtapes ---------- */
+input[type=file]{padding:8px;border:1px dashed var(--line);border-radius:12px;background:#150f10;width:100%;min-width:0;color:var(--muted);font-size:13px}
+input[type=file]::file-selector-button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:8px 14px;margin-right:12px;background:rgba(255,122,47,.16);color:var(--flame);cursor:pointer}
+input[type=file]::file-selector-button:hover{background:rgba(255,122,47,.26)}
+.filebtn{cursor:pointer;width:fit-content}
+.filebtn input{display:none}
+.tag{background:rgba(255,200,150,.05)}
+
+/* Me */
+.msec{margin-top:40px}
+.msec:first-of-type{margin-top:8px}
+.msec-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.msec-h h2{font-size:1.55rem}
+.msec-h p{font-size:14px}
+.profile{overflow:hidden}
+.phero{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.phero img.av,.phero .av{width:88px;height:88px;border:3px solid #3a2724;box-shadow:0 0 0 2px var(--ember),0 0 30px -4px rgba(255,122,47,.55);font-size:34px}
+.phero .pid{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pname{font-family:var(--display);font-size:1.5rem;line-height:1.1;overflow-wrap:anywhere}
+.qr{border-radius:18px;box-shadow:0 0 0 6px rgba(255,200,150,.07),0 22px 40px -22px rgba(255,122,47,.6)}
+.idbox{display:inline-block;background:rgba(255,187,85,.08);border:1px dashed rgba(255,187,85,.35);border-radius:10px;padding:6px 12px;font-size:18px;width:fit-content}
+.radio{padding:14px 16px;border-radius:16px;transition:border-color .15s,background .15s}
+.radio input{appearance:none;-webkit-appearance:none;width:20px;height:20px;border-radius:50%;border:2px solid #7b5f58;display:grid;place-content:center;flex:none;margin-top:2px;background:none}
+.radio input::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--ember);transform:scale(0);transition:transform .15s}
+.radio input:checked{border-color:var(--ember)}
+.radio input:checked::before{transform:scale(1)}
+.radio b{font-size:15.5px}
+#rate button{min-width:56px}
+#rate button[aria-pressed=true]{box-shadow:inset 0 0 0 1px rgba(255,122,47,.6),0 0 18px -4px rgba(255,122,47,.6)}
+
+/* Pigeons */
+.sky{height:224px;border-radius:18px;border-color:#52384f;background:
+  radial-gradient(1.4px 1.4px at 14% 20%,#fff4dc 55%,transparent 60%),
+  radial-gradient(1.2px 1.2px at 28% 34%,#ffe9c4 55%,transparent 60%),
+  radial-gradient(1.6px 1.6px at 44% 14%,#fff4dc 55%,transparent 60%),
+  radial-gradient(1.2px 1.2px at 58% 30%,#ffe9c4 55%,transparent 60%),
+  radial-gradient(1.4px 1.4px at 70% 12%,#fff4dc 55%,transparent 60%),
+  radial-gradient(1.2px 1.2px at 36% 48%,#ffe9c4 55%,transparent 60%),
+  radial-gradient(ellipse 60% 55% at 86% 108%,rgba(255,122,47,.55),transparent 65%),
+  linear-gradient(#1a1f45,#473460 52%,#b8614c 100%)}
+.sky::before{content:"";position:absolute;right:26px;top:20px;width:30px;height:30px;border-radius:50%;box-shadow:inset -9px 5px 0 0 #fbe9c8;opacity:.95;transform:rotate(-18deg)}
+.sky::after{height:64px;background:#150d17;clip-path:polygon(0% 100%,0.0% 78%,2.8% 18%,5.6% 78%,5.6% 78%,8.3% 22%,11.1% 78%,11.1% 78%,13.9% 8%,16.7% 78%,16.7% 78%,19.4% 6%,22.2% 78%,22.2% 78%,25.0% 14%,27.8% 78%,27.8% 78%,30.6% 14%,33.3% 78%,33.3% 78%,36.1% 18%,38.9% 78%,38.9% 78%,41.7% 6%,44.4% 78%,44.4% 78%,47.2% 10%,50.0% 78%,50.0% 78%,52.8% 6%,55.6% 78%,55.6% 78%,58.3% 14%,61.1% 78%,61.1% 78%,63.9% 8%,66.7% 78%,66.7% 78%,69.4% 8%,72.2% 78%,72.2% 78%,75.0% 14%,77.8% 78%,77.8% 78%,80.6% 10%,83.3% 78%,83.3% 78%,86.1% 14%,88.9% 78%,88.9% 78%,91.7% 8%,94.4% 78%,94.4% 78%,97.2% 6%,100.0% 78%,100% 100%)}
+.skynote{font-size:24px;color:#fde8cc;text-shadow:0 2px 8px rgba(0,0,0,.4);z-index:1}
+.pigeon{z-index:2;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
+.item .paper{position:relative;transform:rotate(-.7deg);border-radius:3px 3px 8px 3px}
+.item .paper::after{content:"";position:absolute;right:-9px;bottom:-11px;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e0532e,#8d1f0b);box-shadow:0 3px 6px rgba(0,0,0,.45)}
+
+/* Letters */
+.paper{border-radius:3px 3px 8px 8px;padding-left:64px;background-image:linear-gradient(90deg,transparent 46px,rgba(200,70,50,.32) 46px 48px,transparent 48px),repeating-linear-gradient(transparent 0 31px,rgba(120,90,60,.22) 31px 32px);transform:rotate(-.4deg)}
+.paper textarea{min-height:224px}
+.item .paper{padding-left:14px}
+.env{border-radius:16px;background:linear-gradient(180deg,#322425,#261a1b);transition:transform .15s,border-color .15s}
+.env:hover{transform:translateY(-2px)}
+.seal{box-shadow:0 4px 10px rgba(0,0,0,.45),inset 0 0 0 3px rgba(255,200,150,.15)}
+
+/* Capsules */
+.cap-card{position:relative;overflow:hidden;transition:box-shadow .2s}
+.cap-card:has(.lock){background:repeating-linear-gradient(135deg,rgba(255,200,150,.035) 0 10px,transparent 10px 20px),var(--surface)}
+.cap-card:not(:has(.lock)){box-shadow:0 0 0 1px rgba(255,187,85,.45),0 0 34px -8px rgba(255,150,50,.5)}
+.lock svg{color:var(--flame)}
+.count{font-family:var(--display);font-size:1.5rem;color:var(--flame);letter-spacing:0}
+
+/* Fireplace */
+.tl{position:relative;border-top:0;padding:14px 0}
+.tl::before{content:"";position:absolute;left:17px;top:56px;bottom:-14px;width:2px;background:linear-gradient(var(--line),transparent)}
+.tl:last-child::before{display:none}
+.tl .av{box-shadow:0 0 0 3px var(--surface),0 0 16px -2px rgba(255,122,47,.4)}
+
+/* Mixtapes */
+.tape{border-radius:18px;background:linear-gradient(180deg,rgba(255,200,150,.05),transparent),#2a1f20;transition:transform .2s}
+.tape:hover{transform:translateY(-3px)}
+.cass{background:linear-gradient(160deg,#4a3a37,#2b201f);border-radius:12px;padding:14px;aspect-ratio:1.62;box-shadow:0 14px 26px -12px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.12);
+  background-image:radial-gradient(circle at 12px 12px,#171010 0 3px,#6b5a55 3.5px 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 12px) 12px,#171010 0 3px,#6b5a55 3.5px 5px,transparent 5.5px),radial-gradient(circle at 12px calc(100% - 12px),#171010 0 3px,#6b5a55 3.5px 5px,transparent 5.5px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#171010 0 3px,#6b5a55 3.5px 5px,transparent 5.5px),linear-gradient(160deg,#4a3a37,#2b201f)}
+.cass .lab{height:52%;border-radius:6px;border-bottom:0;border-top:7px solid var(--coal);background:repeating-linear-gradient(transparent 0 19px,rgba(120,90,60,.18) 19px 20px),#fbf3e0;padding:8px 12px;margin:0 4px}
+.cass .lab{font-size:25px;color:#3a2418}
+.cass .win{left:22%;right:22%;bottom:9%;height:28%;background:#120c0b;border:1px solid #5a4743;border-radius:8px;padding:0 12px}
+.cass .win i{width:26px;height:26px;border:0;background:conic-gradient(#d8c8ae 0 40deg,#120c0b 40deg 80deg,#d8c8ae 80deg 120deg,#120c0b 120deg 160deg,#d8c8ae 160deg 200deg,#120c0b 200deg 240deg,#d8c8ae 240deg 280deg,#120c0b 280deg 320deg,#d8c8ae 320deg 360deg);box-shadow:0 0 0 3px #3a2c28}
+.tape:hover .cass .win i{animation:spin 2.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tracks li::marker{color:var(--ember);font-family:var(--mono);font-size:12px}
 @media (max-width:820px){
   .nav{background:rgba(27,18,19,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   .nav a[aria-current=page]{background:none}
@@ -683,7 +764,7 @@ function vFire(){
   var tabs=S.spaces.map(function(s,i){return '<button data-act="space" data-id="'+i+'" aria-pressed="'+(i===S.activeSpace)+'">'+esc(s.name)+'</button>'}).join('')+'<button data-act="new-space" aria-pressed="false">+ New fireplace</button>';
   var items=sp.items.slice().sort(function(a,b){return b.at-a.at}).map(function(it){
     var who=it.by==='me'?{name:'You',c:'#ff7a2f'}:friend(it.by);
-    return '<div class="item" style="align-items:flex-start;gap:14px">'+av(who,36)+'<div class="t" style="flex:1"><div class="row" style="gap:8px"><b>'+esc(who.name)+'</b><span class="mono">'+fmtDate(it.at)+'</span>'+(it.ex?'<span class="tag">Example</span>':'')+'</div>'+(it.kind==='photo'?'<div class="photo pol" style="width:180px;margin:8px 0 6px;--r:-2deg"><div class="pic"><img class="f-warm" src="'+it.src+'" alt="'+esc(it.text)+'" style="animation:none"></div><div class="cap">'+esc(it.text)+'</div></div>':'<div style="margin-top:4px">'+esc(it.text)+'</div>')+'</div></div>';
+    return '<div class="item tl" style="align-items:flex-start;gap:14px">'+av(who,36)+'<div class="t" style="flex:1"><div class="row" style="gap:8px"><b>'+esc(who.name)+'</b><span class="mono">'+fmtDate(it.at)+'</span>'+(it.ex?'<span class="tag">Example</span>':'')+'</div>'+(it.kind==='photo'?'<div class="photo pol" style="width:180px;margin:8px 0 6px;--r:-2deg"><div class="pic"><img class="f-warm" src="'+it.src+'" alt="'+esc(it.text)+'" style="animation:none"></div><div class="cap">'+esc(it.text)+'</div></div>':'<div style="margin-top:4px">'+esc(it.text)+'</div>')+'</div></div>';
   }).join('');
   var mem=sp.members.map(function(m){return esc(friend(m).name)}).join(', ');
   return '<div class="head"><div><h1>Shared Memory Fireplace</h1><p>A shared place for the photos, lines and moments you two or all of you want to keep.</p></div></div>'+liveNote()+'<div class="sub">'+tabs+'</div>'+
@@ -691,7 +772,7 @@ function vFire(){
    '<label class="f">A moment<textarea id="fireTxt" maxlength="300" placeholder="The thing you do not want to forget"></textarea></label>'+
    '<label class="f">A photo (optional)<input type="file" id="fireFile" accept="image/*"></label>'+
    '<button class="btn" data-act="add-memory">Put it on the fire</button></div>'+
-   '<div class="card"><h3>Timeline</h3><div style="margin-top:8px">'+(items||'<div class="empty">Nothing here yet.</div>')+'</div></div></div>';
+   '<div class="card"><h3>Timeline <span class="tag">'+sp.items.length+' moment'+(sp.items.length===1?'':'s')+'</span></h3><div style="margin-top:8px">'+(items||'<div class="empty">Nothing here yet.</div>')+'</div></div></div>';
 }
 function iFire(){
   var f=$('#fireFile');if(f)f.addEventListener('change',function(){fileToData(f.files[0],function(d){draft.fire=d;toast('Photo ready to add.',true)})});
@@ -726,22 +807,24 @@ function vMe(){
   var q=quietOn();
   var qr='<div class="qr" id="qr" role="img" aria-label="Your invitation QR code"></div>';
   var shareText='Join me on Bonfire: '+inviteLink()+' (my ID: '+S.id+')';
-  return '<div class="head"><div><h1>Me</h1><p>You decide who sees you, who can reach you, and when.</p></div><div class="row">'+(LIVE?'<button class="btn ghost" data-act="signout">Sign out</button>':'')+'<button class="btn ghost" data-act="leave">Leave the fire</button></div></div>'+
-   '<div class="grid g2">'+
-   '<div class="card stack"><h3>Invisible mode</h3>'+
+  var HEAD='<div class="head"><div><h1>Me</h1><p>You decide who sees you, who can reach you, and when.</p></div><div class="row">'+(LIVE?'<button class="btn ghost" data-act="signout">Sign out</button>':'')+'<button class="btn ghost" data-act="leave">Leave the fire</button></div></div>';
+  var A='<div class="card stack"><h3>Invisible mode</h3>'+
     ['everyone|Everyone|Anyone on Bonfire can find you.','selected|Selected people|Only people you pick can find you.','nobody|Nobody|You are invisible. Others can only connect if you send them an invitation.'].map(function(s){var p=s.split('|');return '<label class="radio"><input type="radio" name="vis" value="'+p[0]+'"'+(S.vis===p[0]?' checked':'')+'><span><b>'+p[1]+'</b><small>'+p[2]+'</small></span></label>'}).join('')+
     (S.vis==='selected'?'<div><div class="mono" style="margin-bottom:6px">Who can find you</div><div class="row">'+S.friends.map(function(f){return '<label class="chk"><input type="checkbox" data-allow="'+f.id+'"'+(S.allowed.indexOf(f.id)>-1?' checked':'')+'>'+esc(f.name)+'</label>'}).join('')+'</div></div>':'')+
-    '<div class="item" style="border:0;padding:0"><div class="t"><b>Right now</b><div class="muted" id="visSum">'+visSummary()+'</div></div></div></div>'+
-   '<div class="card stack"><h3>Your invitation</h3><div class="row" style="flex-wrap:wrap;gap:18px;align-items:center">'+qr+'<div class="stack" style="flex:1;min-width:190px"><div class="mono">Your personal ID</div><div class="idbox" id="myid">'+esc(S.id)+'</div>'+
+    '<div class="item" style="border:0;padding:0"><div class="t"><b>Right now</b><div class="muted" id="visSum">'+visSummary()+'</div></div></div></div>';
+  var B='<div class="card stack"><h3>Your invitation</h3><div class="row" style="flex-wrap:wrap;gap:18px;align-items:center">'+qr+'<div class="stack" style="flex:1;min-width:190px"><div class="mono">Your personal ID</div><div class="idbox" id="myid">'+esc(S.id)+'</div>'+
     '<div class="row"><button class="btn small" data-act="copy" data-text="'+esc(shareText)+'">Copy invite</button><a class="btn small ghost" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(shareText)+'">Share on WhatsApp</a></div>'+
     '<div class="muted" style="font-size:13px">'+(S.vis==='nobody'?'You are invisible, so this code is the only way in. '+S.invited+' invitation'+(S.invited===1?'':'s')+' shared.':'Share it in any chat. Whoever scans it can send you a connection request.')+'</div></div></div>'+
-    '<div class="stack" style="border-top:1px solid var(--line);padding-top:14px"><b>Add someone by ID or username</b><div class="row" style="flex-wrap:nowrap"><input type="text" id="addId" placeholder="'+(LIVE?'BNF-XXXX-XXXX or @username':'BNF-XXXX-XXXX')+'" aria-label="Friend ID or username">'+(LIVE?'':'<input type="text" id="addName" placeholder="Their name" aria-label="Their name">')+'</div><button class="btn ghost" data-act="add-friend">Connect</button></div></div>'+
-   (LIVE?profileCard()+findCard()+notifyCard():'')+
-   '<div class="card stack"><h3>Quiet hours</h3><div class="row" style="justify-content:space-between"><div class="t"><b>'+(q?'Quiet hours are on':'Take a break')+'</b><div class="muted">'+(q?(S.quiet.until?'Until '+fmtTime(S.quiet.until):'Until you turn it off'):'Mutes alerts and dims the fire. You never owe a reply.')+'</div></div><button class="switch" data-act="quiet-toggle" aria-pressed="'+q+'" aria-label="Quiet hours"></button></div>'+
-    '<div class="seg">'+[['1h','1 hour'],['3h','3 hours'],['morning','Until morning'],['manual','Until I say']].map(function(o){return '<button data-act="quiet-set" data-id="'+o[0]+'" aria-pressed="'+(q&&S.quiet.label===o[0])+'">'+o[1]+'</button>'}).join('')+'</div></div>'+
-   fbCard()+
-   '<div class="card stack"><h3>What Bonfire is for</h3><div class="item"><div class="t"><b>Privacy</b><div class="muted">You control your digital presence.</div></div></div><div class="item"><div class="t"><b>Connection</b><div class="muted">Meaningful time with chosen people.</div></div></div><div class="item"><div class="t"><b>Memories</b><div class="muted">Digital things that feel personal.</div></div></div></div>'+
-   '</div>';
+    '<div class="stack" style="border-top:1px solid var(--line);padding-top:14px"><b>Add someone by ID or username</b><div class="row" style="flex-wrap:nowrap"><input type="text" id="addId" placeholder="'+(LIVE?'BNF-XXXX-XXXX or @username':'BNF-XXXX-XXXX')+'" aria-label="Friend ID or username">'+(LIVE?'':'<input type="text" id="addName" placeholder="Their name" aria-label="Their name">')+'</div><button class="btn ghost" data-act="add-friend">Connect</button></div></div>';
+  var D='<div class="card stack"><h3>Quiet hours</h3><div class="row" style="justify-content:space-between"><div class="t"><b>'+(q?'Quiet hours are on':'Take a break')+'</b><div class="muted">'+(q?(S.quiet.until?'Until '+fmtTime(S.quiet.until):'Until you turn it off'):'Mutes alerts and dims the fire. You never owe a reply.')+'</div></div><button class="switch" data-act="quiet-toggle" aria-pressed="'+q+'" aria-label="Quiet hours"></button></div>'+
+    '<div class="seg">'+[['1h','1 hour'],['3h','3 hours'],['morning','Until morning'],['manual','Until I say']].map(function(o){return '<button data-act="quiet-set" data-id="'+o[0]+'" aria-pressed="'+(q&&S.quiet.label===o[0])+'">'+o[1]+'</button>'}).join('')+'</div></div>';
+  var F='<div class="card stack"><h3>What Bonfire is for</h3><div class="item"><div class="t"><b>Privacy</b><div class="muted">You control your digital presence.</div></div></div><div class="item"><div class="t"><b>Connection</b><div class="muted">Meaningful time with chosen people.</div></div></div><div class="item"><div class="t"><b>Memories</b><div class="muted">Digital things that feel personal.</div></div></div></div>';
+  var sec=function(t,d,body){return body?'<section class="msec"><div class="msec-h"><h2>'+t+'</h2>'+(d?'<p class="muted">'+d+'</p>':'')+'</div><div class="grid g2">'+body+'</div></section>':''};
+  return HEAD+
+    sec('You','Your photo, your name and the invitation that brings people in.',(LIVE?profileCard():'')+B)+
+    sec('Privacy','You choose who can find you.',A+(LIVE?findCard():''))+
+    sec('Comfort','Quiet time, whenever you want it.',(LIVE?notifyCard():'')+D)+
+    sec('Help Bonfire grow','',fbCard()+F);
 }
 /* ---------- feedback to the maker (shared db) ---------- */
 var dbp=null;
@@ -777,7 +860,7 @@ function iMe(){
   var pf=$('#profPhoto');
   if(pf)pf.addEventListener('change',function(){
     cropSquare(pf.files[0],128,function(d){
-      BF.updateProfile({photo:d}).then(function(){LIVE.photo=d;var h=$('#profHead');if(h){var a=h.querySelector('.av');if(a)a.outerHTML=av(myCard(),64)}toast('Profile photo updated.',true)}).catch(function(){toast('Could not save the photo. Try again.',true)});
+      BF.updateProfile({photo:d}).then(function(){LIVE.photo=d;var h=$('#profHead');if(h){var a=h.querySelector('.av');if(a)a.outerHTML=av(myCard(),88)}toast('Profile photo updated.',true)}).catch(function(){toast('Could not save the photo. Try again.',true)});
     });
   });
   if(box){
@@ -1108,7 +1191,7 @@ function cropSquare(file,size,cb){
 }
 function myCard(){return {name:LIVE.name,photo:LIVE.photo,c:colorFor(LIVE.uid)}}
 function profileCard(){
-  return '<div class="card stack"><h3>Your profile</h3><div class="row" style="gap:16px;flex-wrap:nowrap" id="profHead">'+av(myCard(),64)+'<label class="f" style="flex:1">Profile photo<input type="file" id="profPhoto" accept="image/*"></label></div>'+
+  return '<div class="card stack profile"><div class="phero" id="profHead">'+av(myCard(),88)+'<div class="pid"><div class="pname">'+esc(LIVE.name)+'</div><div class="muted">'+(LIVE.username?'@'+esc(LIVE.username):'No username yet')+'</div><label class="btn ghost small filebtn">Change photo<input type="file" id="profPhoto" accept="image/*"></label></div></div>'+
    '<label class="f">Display name<input type="text" id="profName" maxlength="40" value="'+esc(LIVE.name)+'"></label><div class="row"><button class="btn ghost small" data-act="save-name">Save name</button></div>'+
    '<label class="f">Username (one person per name)<span class="at"><span>@</span><input type="text" id="profUser" maxlength="20" autocapitalize="none" autocomplete="off" placeholder="choose a username" value="'+esc(LIVE.username||'')+'"></span></label>'+
    '<div class="row"><button class="btn ghost small" data-act="save-username">Claim username</button></div><div class="muted" id="userMsg" style="font-size:13px">'+(LIVE.username?'Friends can find you at @'+esc(LIVE.username)+' when you are visible to everyone.':'Pick a username so friends can find you easily.')+'</div></div>';
