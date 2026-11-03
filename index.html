@@ -483,7 +483,8 @@ h1{font-size:28px;font-weight:700}h2{font-size:20px;font-weight:650}h3{font-size
 .btn.ghost:hover{background:var(--surface2)}
 .btn svg,.sub button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 input,textarea,select{min-height:44px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);color:var(--fg)}
-input[type=radio],input[type=checkbox],input[type=file],input[type=range]{min-height:0;background:none;border:0}
+input[type=radio],input[type=checkbox]{appearance:auto;-webkit-appearance:auto;width:18px;height:18px;min-height:0;padding:0;margin:3px 0 0;accent-color:var(--ember);flex:none}
+input[type=file],input[type=range]{min-height:0;background:none;border:0}
 input:focus,textarea:focus{outline:2px solid rgba(255,122,47,.45);outline-offset:0;border-color:transparent}
 .sub{display:flex;gap:4px;border-bottom:1px solid var(--line);background:none!important;padding:0;border-radius:0}
 .sub button{background:none!important;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--muted);padding:10px 12px;display:inline-flex;align-items:center;gap:7px;box-shadow:none!important}
@@ -517,6 +518,73 @@ input:focus,textarea:focus{outline:2px solid rgba(255,122,47,.45);outline-offset
 body{background:var(--bg)!important;background-image:none!important}
 .brand{font-family:'Figtree',system-ui,sans-serif!important;font-size:1.2rem!important}
 .btn.ghost,.btn.small.ghost{background:transparent!important;color:var(--fg)!important;border:1px solid var(--line)!important}
+/* ===== CLEAN LAYER: one accent, quiet type, generous space ===== */
+.sub{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}.sub::-webkit-scrollbar{display:none}.sub button{white-space:nowrap;flex:none}
+.sub button[aria-selected=true],.sub button.on{color:var(--fg)!important}
+.qr{box-shadow:none!important;border-radius:14px}
+.idbox{background:var(--surface2)!important;border:1px solid var(--line)!important;color:var(--fg)!important}
+.radio,.chk{background:none!important}
+.radio:has(input:checked),.chk:has(input:checked){background:var(--surface2)!important}
+:root{--bg:#0e0b0c;--surface:#151011;--surface2:#1c1617}
+#view{max-width:880px}
+.mono,.tag,.count,.cn time,.m time,.idbox,.cass .lab small,.disp .cap,.hearth-note{font-family:var(--body)!important;text-transform:none!important;letter-spacing:0!important}
+.mono{font-size:13px;color:var(--muted)}
+.tag{border:0;background:rgba(255,255,255,.06)!important;color:var(--muted);border-radius:999px;padding:2px 10px;font-size:12px}
+.idbox{font-family:'DM Mono',ui-monospace,monospace!important;letter-spacing:.04em!important}
+input[type=file]::file-selector-button{background:var(--surface2)!important;color:var(--fg)!important;border:1px solid var(--line)!important;font-weight:600}
+.card,.scard,.atile,.sec,.panel{padding:24px}
+.card h2,.card h3,.card>h3:first-child{margin-bottom:14px}
+label,.lbl{color:var(--muted);font-size:13px;font-weight:500}
+.muted{color:var(--muted)}
+/* home */
+.home .hcols,.hcols{display:flex!important;flex-direction:column;gap:28px;max-width:640px;margin-inline:auto}
+.hleft,.hright{display:contents}
+.tonight{order:1}.hero{order:2}.actions{order:3}.chatsec{order:4}
+.hleft>section:last-child:not(.hero):not(.actions){display:none}
+.hhead,.stories,.hcols{width:100%;box-sizing:border-box}
+.hhead,.stories{max-width:640px;margin-inline:auto}
+.hcols>*,.hero,.actions,.tonight,.chatsec{width:100%;min-width:0;box-sizing:border-box}
+.hhead{margin-bottom:8px}
+.hgreet h1{font-size:30px}
+.ring{background:none!important;padding:0}
+.ring .av,.ring img.av{border:0;width:56px;height:56px}
+.ring.on{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ember);border-radius:50%}
+.ring.dash{border:1.5px dashed var(--line);border-radius:50%}
+.story:hover .ring{transform:none}
+.hero{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:20px;box-shadow:none!important;min-height:200px}
+.hero canvas{opacity:.9;width:150px;height:180px}
+.hero h2{font-size:1.5rem;font-family:var(--body);font-weight:700}
+.hero p{max-width:30ch}
+.actions{gap:10px}
+.atile{padding:16px 6px;gap:8px;font-size:13px;font-weight:500;background:var(--surface)!important;box-shadow:none}
+.atile:hover,.scard:hover{transform:none;border-color:rgba(255,255,255,.18)!important}
+.aic{background:var(--surface2)!important;color:var(--fg)!important;border-radius:12px}
+.tcard{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:16px}
+.tcard .aic{background:var(--surface2)}
+.link{color:var(--ember);font-size:13px}
+.chatlist{padding:4px 0!important;background:none!important;border:0!important}
+.crow{border-radius:0;padding:12px 4px;border-bottom:1px solid var(--line)}
+.crow:last-child{border-bottom:0}
+.crow:hover{background:none}
+.shead h3{font-size:15px;color:var(--muted);font-weight:600}
+/* nav */
+#nav a{font-weight:500;color:var(--muted)}
+#nav a svg{color:var(--muted);stroke:var(--muted)}
+/* avatars: no glow */
+.av,img.av{box-shadow:none!important}
+.tl .av,.node .av{box-shadow:none!important}
+/* page header */
+h1+p,.view-sub,.lede{color:var(--muted);max-width:52ch}
+.sub{margin:18px 0 24px}
+/* sections on Me */
+.sec h2,.sec>h3{font-size:18px}
+@media (max-width:820px){
+  .card,.scard,.sec,.panel{padding:18px}
+  .hhead,.stories,.hcols{max-width:100%;margin-inline:0}
+  .stories{overflow-x:auto}
+  .hero canvas{width:110px;height:140px}
+  .hero-txt{max-width:64%;padding:20px}
+}
 </style>
 
 <body>
