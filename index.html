@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=DM+Mono:wght@400;500&family=Figtree:wght@400;500;600;700&family=Young+Serif&display=swap" rel="stylesheet">
 <script src="qrcode.js"></script>
 <script src="firebase-config.js"></script>
+<script src="media-config.js"></script>
 <script src="backend.bundle.js"></script>
 <style>
 /* Layout: a night-time shell. Sidebar on desktop, bottom bar on phones. The homepage is a ring of friends around an animated fire. */
@@ -642,6 +643,11 @@ h1+p,.view-sub,.lede{color:var(--muted);max-width:52ch}
 
 .sph-t .tag{align-self:flex-start}
 @media (max-width:820px){#nav{overflow:hidden}#nav a{flex:1 1 0;min-width:0;padding:8px 2px;font-size:10px;gap:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#nav a svg{width:20px;height:20px}}
+
+.cvid{max-width:100%;max-height:360px;border-radius:12px;background:#000;display:block}
+.spk-img img{width:100%;height:100%;object-fit:cover;display:block}
+img[data-mkey]:not(.mok){min-height:120px;background:var(--surface2)}
+.mfail{opacity:.4}
 </style>
 
 <body>
@@ -797,6 +803,7 @@ function render(){
   $('#view').innerHTML=fn();
   var init={home:iHome,moments:iMoments,mixtapes:iTapes,talk:iTalk,keepsakes:iKeep,fireplace:iFire,me:iMe}[cur];
   if(init)init();
+  if(cur==='moments')hydrate();
 }
 
 /* ---------- 3. The Bonfire (home) ---------- */
@@ -1155,14 +1162,41 @@ function iTapes(){
 
 /* ---------- Living Moments: Spark, Circle, Afterglow ---------- */
 var mo={tab:'sparks',sel:null,rec:null,recT:null};
+/* ---------- Private media on Cloudflare R2 (through the Bonfire media Worker) ---------- */
+var MEDIA=((window.BONFIRE_MEDIA&&window.BONFIRE_MEDIA.url)||'').replace(/\/$/,''),mCache={};
+function mediaOn(){return !!(LIVE&&MEDIA)}
+function mUpload(sid,blob,type,cover){
+  return BF.idToken().then(function(tk){
+    return fetch(MEDIA+'/upload/sparks/'+sid+'?type='+type+(cover?'&cover=1':''),{method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':blob.type||'application/octet-stream'},body:blob});
+  }).then(function(r){if(!r.ok)throw new Error('upload '+r.status);return r.json()}).then(function(j){return j.key});
+}
+function mUrl(key){
+  if(mCache[key])return Promise.resolve(mCache[key]);
+  return BF.idToken().then(function(tk){return fetch(MEDIA+'/media/'+key,{headers:{Authorization:'Bearer '+tk}})})
+    .then(function(r){if(!r.ok)throw new Error('media '+r.status);return r.blob()}).then(function(b){return mCache[key]=URL.createObjectURL(b)});
+}
+function hydrate(){
+  [].forEach.call(document.querySelectorAll('[data-mkey]:not([data-h])'),function(el){
+    el.setAttribute('data-h','1');
+    mUrl(el.getAttribute('data-mkey')).then(function(u){el.src=u;el.classList.add('mok')}).catch(function(){el.classList.add('mfail');el.alt='Could not load'});
+  });
+}
+function toBlob(file,max,q,cb){
+  if(!file)return;
+  var r=new FileReader();
+  r.onload=function(){var im=new Image();
+    im.onload=function(){var sc=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(function(b){cb(b,URL.createObjectURL(b))},'image/jpeg',q)};
+    im.onerror=function(){toast('That file could not be read as an image.',true)};im.src=r.result};
+  r.readAsDataURL(file);
+}
 function fmtDay(t){return new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}
 function allSparks(){
   var out=[];
   if(LIVE){
     (live.sparks||[]).forEach(function(sp){
       var cs=(live.contribs&&live.contribs[sp.id])||[];
-      out.push({id:sp.id,mine:sp.owner===LIVE.uid,ownerName:sp.owner===LIVE.uid?'You':sp.ownerName,ownerId:sp.owner,title:sp.title,text:sp.text||'',photo:sp.photo||'',members:sp.members||[],at:sp.at,closed:!!sp.closed,closedAt:sp.closedAt||0,
-        contribs:cs.map(function(c){return {id:c.id,mine:c.by===LIVE.uid,byId:c.by,byName:c.by===LIVE.uid?'You':c.byName,type:c.type,text:c.text||'',media:c.media||'',at:c.at}})});
+      out.push({id:sp.id,mine:sp.owner===LIVE.uid,ownerName:sp.owner===LIVE.uid?'You':sp.ownerName,ownerId:sp.owner,title:sp.title,text:sp.text||'',photo:sp.photo||'',pkey:sp.pkey||'',members:sp.members||[],at:sp.at,closed:!!sp.closed,closedAt:sp.closedAt||0,
+        contribs:cs.map(function(c){return {id:c.id,mine:c.by===LIVE.uid,byId:c.by,byName:c.by===LIVE.uid?'You':c.byName,type:c.type,text:c.text||'',media:c.media||'',mkey:c.mkey||'',at:c.at}})});
     });
   }else{
     (S.sparks||[]).forEach(function(sp){
@@ -1190,12 +1224,12 @@ function stack(ps,n){
 function sparkCard(sp,afterglow){
   var ps=people(sp),cn=sp.contribs.length;
   return '<button class="spk'+(afterglow?' ag':'')+'" data-act="mo-open" data-id="'+sp.id+'">'+
-   (sp.photo?'<span class="spk-img" style="background-image:url('+sp.photo+')"></span>':'<span class="spk-img none">'+ico('flame')+'</span>')+
+   (sp.pkey?'<span class="spk-img"><img data-mkey="'+esc(sp.pkey)+'" alt=""></span>':(sp.photo?'<span class="spk-img" style="background-image:url('+sp.photo+')"></span>':'<span class="spk-img none">'+ico('flame')+'</span>'))+
    '<span class="spk-b"><b>'+esc(sp.title)+'</b><small>'+esc(sp.ownerName)+' · '+fmtDay(afterglow&&sp.closedAt?sp.closedAt:sp.at)+'</small>'+
    '<span class="spk-f">'+stack(ps,4)+'<span class="muted">'+cn+' contribution'+(cn===1?'':'s')+'</span></span></span></button>';
 }
 function vMoments(){
-  var head='<div class="head"><div><h1>Moments</h1><p>Don’t just post a moment. Let people become part of it.</p></div>'+(mo.sel?'':'<button class="btn" data-act="mo-new">'+ico('plus')+' Start a Spark</button>')+'</div>'+liveNote();
+  var head='<div class="head"><div><h1>Moments</h1><p>Don’t just post a moment. Let people become part of it.</p></div>'+(mo.sel?'':'<button class="btn" data-act="mo-new">'+ico('plus')+' Start a Spark</button>')+'</div>'+(LIVE?'':liveNote());
   var all=allSparks();
   if(mo.sel){
     var sp=all.filter(function(x){return x.id===mo.sel})[0];
@@ -1214,8 +1248,10 @@ function vMoments(){
 function contribHtml(c){
   var who='<div class="cwho">'+av(personCard(c.byId,c.byName),26)+'<b>'+esc(c.byName)+'</b><small>'+fmtDay(c.at)+'</small></div>';
   var b='';
-  if(c.type==='photo')b=(c.media?'<img class="cimg" src="'+c.media+'" alt="Photo from '+esc(c.byName)+'">':'')+(c.text?'<p class="chand">'+esc(c.text)+'</p>':'');
-  else if(c.type==='voice')b='<audio controls preload="none" src="'+c.media+'"></audio>';
+  var mk=c.mkey?' data-mkey="'+esc(c.mkey)+'"':'',ms=c.media?' src="'+c.media+'"':'';
+  if(c.type==='photo')b=((c.media||c.mkey)?'<img class="cimg"'+mk+ms+' alt="Photo from '+esc(c.byName)+'">':'')+(c.text?'<p class="chand">'+esc(c.text)+'</p>':'');
+  else if(c.type==='video')b='<video class="cvid" controls playsinline preload="metadata"'+mk+ms+'></video>'+(c.text?'<p class="chand">'+esc(c.text)+'</p>':'');
+  else if(c.type==='voice')b='<audio controls preload="metadata"'+mk+ms+'></audio>';
   else if(c.type==='memory')b='<span class="clab">Related memory</span><p>'+esc(c.text)+'</p>';
   else b='<p class="chand">'+esc(c.text)+'</p>';
   return '<div class="contrib">'+who+b+'</div>';
@@ -1223,17 +1259,18 @@ function contribHtml(c){
 function vSpark(sp){
   var ps=people(sp),ctype=draft.ctype||'note';
   var h='<button class="btn ghost small" data-act="mo-back">'+ico('back')+' All moments</button>'+
-   '<article class="sparkhead">'+(sp.photo?'<img class="spk-hero" src="'+sp.photo+'" alt="">':'')+
+   '<article class="sparkhead">'+(sp.pkey?'<img class="spk-hero" data-mkey="'+esc(sp.pkey)+'" alt="">':(sp.photo?'<img class="spk-hero" src="'+sp.photo+'" alt="">':''))+
    '<div class="sph-t">'+(sp.closed?'<span class="tag">Afterglow</span>':'<span class="tag">Open Spark</span>')+'<h2>'+esc(sp.title)+'</h2>'+(sp.text?'<p>'+esc(sp.text)+'</p>':'')+
    '<div class="muted" style="font-size:13px">Started by '+esc(sp.ownerName)+' · '+fmtDay(sp.at)+(sp.closed&&sp.closedAt?' · Completed '+fmtDay(sp.closedAt):'')+'</div>'+
    '<div class="spk-f" style="margin-top:6px">'+stack(ps,6)+'<span class="muted">'+ps.length+' '+(ps.length===1?'person':'people')+' in the Circle</span></div></div></article>';
   var list=sp.contribs.length?sp.contribs.map(contribHtml).join(''):'<div class="empty">Nothing added yet. Be the first to put something in the Circle.</div>';
   var comp='';
   if(!sp.closed){
-    var seg=[['note','Note'],['photo','Photo'],['voice','Voice'],['memory','Memory']].map(function(t){return '<button data-act="mo-ctype" data-id="'+t[0]+'" aria-pressed="'+(ctype===t[0])+'">'+t[1]+'</button>'}).join('');
+    var seg=[['note','Note'],['photo','Photo'],['voice','Voice']].concat(mediaOn()?[['video','Video']]:[]).concat([['memory','Memory']]).map(function(t){return '<button data-act="mo-ctype" data-id="'+t[0]+'" aria-pressed="'+(ctype===t[0])+'">'+t[1]+'</button>'}).join('');
     var inner;
     if(ctype==='photo')inner='<label class="f">Photo<input type="file" id="moPhoto" accept="image/*"></label><div id="moPhotoPrev" class="muted">'+(draft.mphoto?'<img class="cimg" src="'+draft.mphoto+'" alt="Preview">':'')+'</div><label class="f">Handwritten caption (optional)<input type="text" id="moText" maxlength="120" value="'+esc(draft.mnote||'')+'"></label>';
-    else if(ctype==='voice')inner='<div class="row"><button class="btn ghost" data-act="mo-rec" id="recBtn">'+ico('mic')+' '+(mo.rec?'Stop recording':'Record up to 12 seconds')+'</button></div><div id="voicePrev">'+(draft.mvoice?'<audio controls src="'+draft.mvoice+'"></audio>':'')+'</div>';
+    else if(ctype==='video')inner='<label class="f">Video (up to 30 MB)<input type="file" id="moVideo" accept="video/*"></label><div id="moVideoPrev">'+(draft.mvideo?'<video class="cvid" controls playsinline src="'+draft.mvideo+'"></video>':'')+'</div><label class="f">Caption (optional)<input type="text" id="moText" maxlength="120" value="'+esc(draft.mnote||'')+'"></label>';
+    else if(ctype==='voice')inner='<div class="row"><button class="btn ghost" data-act="mo-rec" id="recBtn">'+ico('mic')+' '+(mo.rec?'Stop recording':'Record up to '+(mediaOn()?'60':'12')+' seconds')+'</button></div><div id="voicePrev">'+(draft.mvoice?'<audio controls src="'+draft.mvoice+'"></audio>':'')+'</div>';
     else inner='<label class="f">'+(ctype==='memory'?'A related memory':'A handwritten-style note')+'<textarea id="moText" maxlength="400" rows="3" placeholder="'+(ctype==='memory'?'That time we got lost near the lake…':'Write something for the Circle')+'">'+esc(draft.mnote||'')+'</textarea></label>';
     comp='<div class="card stack composer"><b>Add to this Spark</b><div class="seg">'+seg+'</div>'+inner+'<div class="row"><button class="btn" data-act="mo-add" data-id="'+sp.id+'">Add to the Circle</button></div></div>';
   }
@@ -1242,7 +1279,10 @@ function vSpark(sp){
 }
 function iMoments(){
   var t=$('#moText');if(t)t.addEventListener('input',function(){draft.mnote=t.value});
-  var f=$('#moPhoto');if(f)f.addEventListener('change',function(){shrinkPhoto(f.files[0],function(d){draft.mphoto=d;var p=$('#moPhotoPrev');if(p)p.innerHTML='<img class="cimg" src="'+d+'" alt="Preview">'})});
+  var f=$('#moPhoto');if(f)f.addEventListener('change',function(){
+    if(mediaOn())toBlob(f.files[0],1600,.85,function(b,u){draft.mblob=b;draft.mphoto=u;var p=$('#moPhotoPrev');if(p)p.innerHTML='<img class="cimg" src="'+u+'" alt="Preview">'});
+    else shrinkPhoto(f.files[0],function(d){draft.mphoto=d;var p=$('#moPhotoPrev');if(p)p.innerHTML='<img class="cimg" src="'+d+'" alt="Preview">'})});
+  var v=$('#moVideo');if(v)v.addEventListener('change',function(){var fl=v.files[0];if(!fl)return;if(fl.size>30*1024*1024){toast('That video is over 30 MB. Trim it first.',true);v.value='';return}draft.mblob=fl;draft.mvideo=URL.createObjectURL(fl);var p=$('#moVideoPrev');if(p)p.innerHTML='<video class="cvid" controls playsinline src="'+draft.mvideo+'"></video>'});
 }
 function shrinkPhoto(file,cb){
   if(!file)return;
@@ -1277,13 +1317,14 @@ function startRec(){
     mr.onstop=function(){
       stream.getTracks().forEach(function(t){t.stop()});mo.rec=null;clearTimeout(mo.recT);
       var blob=new Blob(chunks,{type:mr.mimeType||'audio/webm'}),fr=new FileReader();
+      if(mediaOn()){draft.mblob=blob;draft.mvoice=URL.createObjectURL(blob);if(cur==='moments')render();return}
       fr.onload=function(){
         if(fr.result.length>90000){toast('That recording is too long. Keep it short.',true);draft.mvoice='';}else draft.mvoice=fr.result;
         if(cur==='moments')render();
       };
       fr.readAsDataURL(blob);
     };
-    mr.start();mo.recT=setTimeout(stopRec,12000);
+    mr.start();mo.recT=setTimeout(stopRec,mediaOn()?60000:12000);
     if(cur==='moments')render();
   }).catch(function(){toast('Allow the microphone to record a voice note.',true)});
 }
@@ -1295,8 +1336,10 @@ function newSparkModal(){
    '<label class="f">A photo (optional)<input type="file" id="spPhoto" accept="image/*"></label><div id="spPrev"></div>'+
    '<div><div class="muted" style="font-size:13px;margin-bottom:6px">Who is invited to join the Circle</div><div class="row">'+S.friends.map(function(f){return '<label class="chk"><input type="checkbox" data-sp="'+f.id+'" checked>'+esc(f.name)+'</label>'}).join('')+'</div></div>'+
    '<div class="row"><button class="btn" data-act="mo-create">Light the Spark</button><button class="btn ghost" data-act="close-modal">Cancel</button></div></div>');
-  draft.sphoto='';
-  var f=$('#spPhoto');if(f)f.addEventListener('change',function(){shrinkPhoto(f.files[0],function(d){draft.sphoto=d;$('#spPrev').innerHTML='<img class="cimg" src="'+d+'" alt="Preview">'})});
+  draft.sphoto='';draft.sblob=null;
+  var f=$('#spPhoto');if(f)f.addEventListener('change',function(){
+    if(mediaOn())toBlob(f.files[0],1600,.85,function(b,u){draft.sblob=b;draft.sphoto='';$('#spPrev').innerHTML='<img class="cimg" src="'+u+'" alt="Preview">'});
+    else shrinkPhoto(f.files[0],function(d){draft.sphoto=d;$('#spPrev').innerHTML='<img class="cimg" src="'+d+'" alt="Preview">'})});
 }
 function newId(){return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function vTapes(){
@@ -1443,7 +1486,7 @@ document.addEventListener('click',function(e){
    case 'sub':sub=id;render();break;
    case 'close-modal':closeModal();break;
    case 'mo-tab':mo.tab=id;render();break;
-   case 'mo-open':mo.sel=id;draft.ctype='note';draft.mnote='';draft.mphoto='';draft.mvoice='';render();window.scrollTo(0,0);break;
+   case 'mo-open':mo.sel=id;draft.ctype='note';draft.mnote='';draft.mphoto='';draft.mvoice='';draft.mvideo='';draft.mblob=null;render();window.scrollTo(0,0);break;
    case 'mo-back':stopRec();mo.sel=null;render();break;
    case 'mo-new':newSparkModal();break;
    case 'mo-ctype':draft.ctype=id;render();break;
@@ -1453,14 +1496,20 @@ document.addEventListener('click',function(e){
      var inv=[].slice.call(document.querySelectorAll('[data-sp]')).filter(function(x){return x.checked}).map(function(x){return x.getAttribute('data-sp')});
      if(!inv.length){toast('Invite at least one friend.',true);break}
      var tx=($('#spText').value||'').trim(),ph=draft.sphoto||'';
-     if(LIVE){BF.createSpark({title:ti,text:tx,photo:ph,members:inv.concat([LIVE.uid])}).then(function(id){closeModal();mo.sel=id;mo.tab='sparks';draft.ctype='note';draft.mnote='';draft.mphoto='';draft.mvoice='';if(cur!=='moments')location.hash='#moments';else render();toast('Spark lit. Your friends can join now.',true)}).catch(function(){toast('Could not start the Spark. Check your connection.',true)});break}
+     if(LIVE){var cb=draft.sblob;t.disabled=true;t.textContent='Lighting…';BF.createSpark({title:ti,text:tx,photo:cb?'':ph,members:inv.concat([LIVE.uid])}).then(function(id){
+       if(!cb||!mediaOn())return id;
+       return mUpload(id,cb,'photo',true).then(function(k){return BF.setSparkCover(id,k)}).then(function(){return id},function(){toast('Spark lit, but the cover photo could not upload.',true);return id});
+     }).then(function(id){closeModal();mo.sel=id;mo.tab='sparks';draft.ctype='note';draft.mnote='';draft.mphoto='';draft.mvoice='';if(cur!=='moments')location.hash='#moments';else render();toast('Spark lit. Your friends can join now.',true)}).catch(function(){t.disabled=false;t.textContent='Light the Spark';toast('Could not start the Spark. Check your connection.',true)});break}
      (S.sparks=S.sparks||[]).push({id:newId(),owner:'me',title:ti,text:tx,photo:ph,members:inv,at:Date.now(),closed:false,contribs:[]});save();closeModal();toast('Spark lit.',true);render();break}
    case 'mo-add':{
      var ty=draft.ctype||'note',tx2=($('#moText')?$('#moText').value:'').trim(),md='';
+     var useR2=mediaOn()&&(ty==='photo'||ty==='voice'||ty==='video');
      if(ty==='photo'){md=draft.mphoto||'';if(!md){toast('Choose a photo first.',true);break}}
+     else if(ty==='video'){if(!draft.mblob){toast('Choose a video first.',true);break}}
      else if(ty==='voice'){md=draft.mvoice||'';if(!md){toast('Record something first.',true);break}}
      else if(!tx2){toast('Write something first.',true);break}
-     var done2=function(){draft.mnote='';draft.mphoto='';draft.mvoice='';toast('Added to the Circle.',true);render()};
+     var done2=function(){draft.mnote='';draft.mphoto='';draft.mvoice='';draft.mvideo='';draft.mblob=null;toast('Added to the Circle.',true);render()};
+     if(useR2){var bl=draft.mblob;t.disabled=true;t.textContent='Uploading…';mUpload(id,bl,ty).then(function(k){return BF.addContrib(id,{type:ty,text:tx2,media:'',mkey:k})}).then(done2).catch(function(){t.disabled=false;t.textContent='Add to the Circle';toast('Upload failed. Check your connection and try again.',true)});break}
      if(LIVE){BF.addContrib(id,{type:ty,text:tx2,media:md}).then(done2).catch(function(){toast('Could not add. Check your connection.',true)});break}
      var spx=(S.sparks||[]).filter(function(x){return x.id===id})[0];if(!spx)break;
      spx.contribs.push({id:newId(),by:'me',type:ty,text:tx2,media:md,at:Date.now()});save();done2();break}
