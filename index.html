@@ -615,6 +615,33 @@ h1+p,.view-sub,.lede{color:var(--muted);max-width:52ch}
 .m.me .tapemsg .yt{color:var(--muted);border-color:var(--line)}
 .m.me .tapemsg .btn{background:var(--ember);color:#1a0d06}
 .tapemsg .tt b{color:var(--fg)}
+
+/* moments */
+.astack{display:inline-flex}.astack .av{border:2px solid var(--surface);margin-left:-8px}.astack .av:first-child{margin-left:0}
+.amore{margin-left:4px;font-size:12px;color:var(--muted);align-self:center}
+.spklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.spk{display:flex;flex-direction:column;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;padding:0;color:var(--fg);cursor:pointer}
+.spk:hover{border-color:rgba(255,255,255,.2)}
+.spk-img{height:150px;background:var(--surface2) center/cover;display:grid;place-items:center}
+.spk-img svg{width:34px;height:34px;fill:none;stroke:var(--ember);stroke-width:1.5}
+.spk-b{display:flex;flex-direction:column;gap:4px;padding:14px 16px 16px}.spk-b b{font-size:16px}.spk-b small{color:var(--muted)}
+.spk-f{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:13px}
+.sparkhead{margin:16px 0 24px;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.spk-hero{width:100%;max-height:320px;object-fit:cover;display:block}
+.sph-t{padding:20px;display:flex;flex-direction:column;gap:8px}.sph-t h2{margin:0}.sph-t p{margin:0;color:var(--fg);white-space:pre-wrap}
+.shead2{font-size:15px;color:var(--muted);margin:0 0 12px}
+.contribs{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.contrib{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.cwho{display:flex;align-items:center;gap:8px}.cwho small{color:var(--muted);margin-left:auto}
+.cimg{max-width:100%;max-height:320px;border-radius:12px;display:block}
+.chand{font-family:'Caveat','Segoe Print',cursive;font-size:22px;line-height:1.25;margin:0;white-space:pre-wrap}
+.clab{font-size:12px;color:var(--muted)}.contrib p{margin:0;white-space:pre-wrap}
+.contrib audio,.composer audio{width:100%;height:40px}
+.composer{margin-top:8px}
+.card.composer textarea{min-height:90px;resize:vertical}
+
+.sph-t .tag{align-self:flex-start}
+@media (max-width:820px){#nav{overflow:hidden}#nav a{flex:1 1 0;min-width:0;padding:8px 2px;font-size:10px;gap:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#nav a svg{width:20px;height:20px}}
 </style>
 
 <body>
@@ -696,7 +723,7 @@ function seed(){
     fbShown:0
   };
 }
-var S,LIVE=null,DEMO=false,JOIN=null,live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{}};
+var S,LIVE=null,DEMO=false,JOIN=null,live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{},sparks:[],contribs:{}};
 try{var raw=localStorage.getItem('bonfire-v1');S=raw?JSON.parse(raw):null}catch(e){S=null}
 if(!S||!S.friends)S=seed();
 try{JOIN=new URLSearchParams(location.search).get('join')}catch(e){}
@@ -744,6 +771,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()
 var VIEWS=[
  ['home','Bonfire','<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-9z"/>'],
  ['talk','Talk','<path d="M4 5h16v11H9l-5 4z"/>'],
+ ['moments','Moments','<path d="M12 3l2.2 5.3L20 9l-4.2 3.9L17 19l-5-3-5 3 1.200-6.100L4 9l5.800-.7z"/>'],
  ['keepsakes','Keepsakes','<rect x="5" y="3" width="14" height="18" rx="1"/><rect x="7.5" y="5.5" width="9" height="9"/>'],
  ['fireplace','Fireplace','<path d="M3 11l9-7 9 7v9H3z"/><path d="M10 20v-5h4v5"/>'],
  ['mixtapes','Mixtapes','<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>'],
@@ -765,9 +793,9 @@ function render(){
   if(gated())return;
   if(stopFire){stopFire();stopFire=null}
   renderNav();applyQuiet();
-  var fn={home:vHome,talk:vTalk,keepsakes:vKeep,fireplace:vFire,mixtapes:vTapes,me:vMe}[cur];
+  var fn={home:vHome,moments:vMoments,talk:vTalk,keepsakes:vKeep,fireplace:vFire,mixtapes:vTapes,me:vMe}[cur];
   $('#view').innerHTML=fn();
-  var init={home:iHome,mixtapes:iTapes,talk:iTalk,keepsakes:iKeep,fireplace:iFire,me:iMe}[cur];
+  var init={home:iHome,moments:iMoments,mixtapes:iTapes,talk:iTalk,keepsakes:iKeep,fireplace:iFire,me:iMe}[cur];
   if(init)init();
 }
 
@@ -782,6 +810,8 @@ function ico(n){
     bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
     tape:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>',
+    back:'<path d="M15 5l-7 7 7 7"/>',
+    mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
     play:'<path d="M7 4.5v15l13-7.5z"/>',
     pause:'<path d="M8 5v14M16 5v14"/>',
     moon:'<path d="M20 14A8 8 0 1 1 10 4a6.5 6.5 0 0 0 10 10z"/>',
@@ -1122,6 +1152,153 @@ function iTapes(){
   var i=$('#trkT');
   if(i)i.addEventListener('input',function(){clearTimeout(searchTimer);var v=i.value.trim();searchTimer=setTimeout(function(){searchSongs(v)},350)});
 }
+
+/* ---------- Living Moments: Spark, Circle, Afterglow ---------- */
+var mo={tab:'sparks',sel:null,rec:null,recT:null};
+function fmtDay(t){return new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}
+function allSparks(){
+  var out=[];
+  if(LIVE){
+    (live.sparks||[]).forEach(function(sp){
+      var cs=(live.contribs&&live.contribs[sp.id])||[];
+      out.push({id:sp.id,mine:sp.owner===LIVE.uid,ownerName:sp.owner===LIVE.uid?'You':sp.ownerName,ownerId:sp.owner,title:sp.title,text:sp.text||'',photo:sp.photo||'',members:sp.members||[],at:sp.at,closed:!!sp.closed,closedAt:sp.closedAt||0,
+        contribs:cs.map(function(c){return {id:c.id,mine:c.by===LIVE.uid,byId:c.by,byName:c.by===LIVE.uid?'You':c.byName,type:c.type,text:c.text||'',media:c.media||'',at:c.at}})});
+    });
+  }else{
+    (S.sparks||[]).forEach(function(sp){
+      out.push({id:sp.id,mine:sp.owner==='me',ownerName:sp.owner==='me'?'You':friend(sp.owner).name,ownerId:sp.owner,title:sp.title,text:sp.text||'',photo:sp.photo||'',members:sp.members||[],at:sp.at,closed:!!sp.closed,closedAt:sp.closedAt||0,
+        contribs:(sp.contribs||[]).map(function(c){return {id:c.id,mine:c.by==='me',byId:c.by,byName:c.by==='me'?'You':friend(c.by).name,type:c.type,text:c.text||'',media:c.media||'',at:c.at}})});
+    });
+  }
+  return out.sort(function(a,b){return b.at-a.at});
+}
+function people(sp){
+  var seen={},list=[];
+  function add(id,name){if(seen[id])return;seen[id]=1;list.push({id:id,name:name})}
+  add(sp.ownerId,sp.ownerName);
+  sp.contribs.forEach(function(c){add(c.byId,c.byName)});
+  return list;
+}
+function personCard(id,name){
+  if(LIVE&&id===LIVE.uid)return myCard();
+  if(!LIVE&&id==='me')return {name:S.name||'You',c:'#ff7a2f'};
+  var f=friend(id);return f.name==='Someone'?{name:name||'Someone',c:colorFor?colorFor(id):COLORS[0]}:f;
+}
+function stack(ps,n){
+  return '<span class="astack">'+ps.slice(0,n||4).map(function(x){return av(personCard(x.id,x.name),24)}).join('')+(ps.length>(n||4)?'<span class="amore">+'+(ps.length-(n||4))+'</span>':'')+'</span>';
+}
+function sparkCard(sp,afterglow){
+  var ps=people(sp),cn=sp.contribs.length;
+  return '<button class="spk'+(afterglow?' ag':'')+'" data-act="mo-open" data-id="'+sp.id+'">'+
+   (sp.photo?'<span class="spk-img" style="background-image:url('+sp.photo+')"></span>':'<span class="spk-img none">'+ico('flame')+'</span>')+
+   '<span class="spk-b"><b>'+esc(sp.title)+'</b><small>'+esc(sp.ownerName)+' · '+fmtDay(afterglow&&sp.closedAt?sp.closedAt:sp.at)+'</small>'+
+   '<span class="spk-f">'+stack(ps,4)+'<span class="muted">'+cn+' contribution'+(cn===1?'':'s')+'</span></span></span></button>';
+}
+function vMoments(){
+  var head='<div class="head"><div><h1>Moments</h1><p>Don’t just post a moment. Let people become part of it.</p></div>'+(mo.sel?'':'<button class="btn" data-act="mo-new">'+ico('plus')+' Start a Spark</button>')+'</div>'+liveNote();
+  var all=allSparks();
+  if(mo.sel){
+    var sp=all.filter(function(x){return x.id===mo.sel})[0];
+    if(sp)return head.replace(/<button class="btn"[^]*?<\/button>/,'')+vSpark(sp);
+    mo.sel=null;
+  }
+  var tabs='<div class="sub" role="tablist">'+[['sparks','flame','Sparks'],['afterglow','moon','Afterglow']].map(function(t){return '<button role="tab" aria-selected="'+(mo.tab===t[0])+'" data-act="mo-tab" data-id="'+t[0]+'">'+ico(t[1])+t[2]+'</button>'}).join('')+'</div>';
+  var open=all.filter(function(x){return !x.closed}),done=all.filter(function(x){return x.closed});
+  var body;
+  if(mo.tab==='sparks')body=open.length?'<div class="spklist">'+open.map(function(x){return sparkCard(x)}).join('')+'</div>':
+    '<div class="empty">No Sparks yet. Start one about a trip, a song, a funny day, and invite your friends to add to it.</div>';
+  else body=done.length?'<div class="spklist">'+done.map(function(x){return sparkCard(x,true)}).join('')+'</div>':
+    '<div class="empty">Afterglow is where finished Sparks live as memories. Complete a Spark to keep it here.</div>';
+  return head+tabs+body;
+}
+function contribHtml(c){
+  var who='<div class="cwho">'+av(personCard(c.byId,c.byName),26)+'<b>'+esc(c.byName)+'</b><small>'+fmtDay(c.at)+'</small></div>';
+  var b='';
+  if(c.type==='photo')b=(c.media?'<img class="cimg" src="'+c.media+'" alt="Photo from '+esc(c.byName)+'">':'')+(c.text?'<p class="chand">'+esc(c.text)+'</p>':'');
+  else if(c.type==='voice')b='<audio controls preload="none" src="'+c.media+'"></audio>';
+  else if(c.type==='memory')b='<span class="clab">Related memory</span><p>'+esc(c.text)+'</p>';
+  else b='<p class="chand">'+esc(c.text)+'</p>';
+  return '<div class="contrib">'+who+b+'</div>';
+}
+function vSpark(sp){
+  var ps=people(sp),ctype=draft.ctype||'note';
+  var h='<button class="btn ghost small" data-act="mo-back">'+ico('back')+' All moments</button>'+
+   '<article class="sparkhead">'+(sp.photo?'<img class="spk-hero" src="'+sp.photo+'" alt="">':'')+
+   '<div class="sph-t">'+(sp.closed?'<span class="tag">Afterglow</span>':'<span class="tag">Open Spark</span>')+'<h2>'+esc(sp.title)+'</h2>'+(sp.text?'<p>'+esc(sp.text)+'</p>':'')+
+   '<div class="muted" style="font-size:13px">Started by '+esc(sp.ownerName)+' · '+fmtDay(sp.at)+(sp.closed&&sp.closedAt?' · Completed '+fmtDay(sp.closedAt):'')+'</div>'+
+   '<div class="spk-f" style="margin-top:6px">'+stack(ps,6)+'<span class="muted">'+ps.length+' '+(ps.length===1?'person':'people')+' in the Circle</span></div></div></article>';
+  var list=sp.contribs.length?sp.contribs.map(contribHtml).join(''):'<div class="empty">Nothing added yet. Be the first to put something in the Circle.</div>';
+  var comp='';
+  if(!sp.closed){
+    var seg=[['note','Note'],['photo','Photo'],['voice','Voice'],['memory','Memory']].map(function(t){return '<button data-act="mo-ctype" data-id="'+t[0]+'" aria-pressed="'+(ctype===t[0])+'">'+t[1]+'</button>'}).join('');
+    var inner;
+    if(ctype==='photo')inner='<label class="f">Photo<input type="file" id="moPhoto" accept="image/*"></label><div id="moPhotoPrev" class="muted">'+(draft.mphoto?'<img class="cimg" src="'+draft.mphoto+'" alt="Preview">':'')+'</div><label class="f">Handwritten caption (optional)<input type="text" id="moText" maxlength="120" value="'+esc(draft.mnote||'')+'"></label>';
+    else if(ctype==='voice')inner='<div class="row"><button class="btn ghost" data-act="mo-rec" id="recBtn">'+ico('mic')+' '+(mo.rec?'Stop recording':'Record up to 12 seconds')+'</button></div><div id="voicePrev">'+(draft.mvoice?'<audio controls src="'+draft.mvoice+'"></audio>':'')+'</div>';
+    else inner='<label class="f">'+(ctype==='memory'?'A related memory':'A handwritten-style note')+'<textarea id="moText" maxlength="400" rows="3" placeholder="'+(ctype==='memory'?'That time we got lost near the lake…':'Write something for the Circle')+'">'+esc(draft.mnote||'')+'</textarea></label>';
+    comp='<div class="card stack composer"><b>Add to this Spark</b><div class="seg">'+seg+'</div>'+inner+'<div class="row"><button class="btn" data-act="mo-add" data-id="'+sp.id+'">Add to the Circle</button></div></div>';
+  }
+  var own=(sp.mine&&!sp.closed)?'<div class="row" style="margin-top:8px"><button class="btn ghost" data-act="mo-complete" data-id="'+sp.id+'">'+ico('moon')+' Complete and save as Afterglow</button></div><p class="muted" style="font-size:13px">Completing it locks the Spark and keeps everything as one memory collection.</p>':'';
+  return h+'<section class="circle"><h3 class="shead2">Circle <span class="muted">'+sp.contribs.length+'</span></h3><div class="contribs">'+list+'</div></section>'+comp+own;
+}
+function iMoments(){
+  var t=$('#moText');if(t)t.addEventListener('input',function(){draft.mnote=t.value});
+  var f=$('#moPhoto');if(f)f.addEventListener('change',function(){shrinkPhoto(f.files[0],function(d){draft.mphoto=d;var p=$('#moPhotoPrev');if(p)p.innerHTML='<img class="cimg" src="'+d+'" alt="Preview">'})});
+}
+function shrinkPhoto(file,cb){
+  if(!file)return;
+  var r=new FileReader();
+  r.onload=function(){
+    var im=new Image();
+    im.onload=function(){
+      var dim=720,q=.7,out='';
+      for(var i=0;i<8;i++){
+        var sc=Math.min(1,dim/Math.max(im.width,im.height)),c=document.createElement('canvas');
+        c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);
+        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+        out=c.toDataURL('image/jpeg',q);
+        if(out.length<=70000)break;
+        dim=Math.round(dim*.82);q=Math.max(.45,q-.06);
+      }
+      if(out.length>90000){toast('That photo is too detailed to share. Try another.',true);return}
+      cb(out);
+    };
+    im.onerror=function(){toast('That file could not be read as an image.',true)};
+    im.src=r.result;
+  };
+  r.readAsDataURL(file);
+}
+function stopRec(){if(mo.rec&&mo.rec.state!=='inactive')mo.rec.stop();clearTimeout(mo.recT)}
+function startRec(){
+  if(!navigator.mediaDevices||!window.MediaRecorder){toast('Voice recording is not supported in this browser.',true);return}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    var chunks=[],mr=new MediaRecorder(stream,{audioBitsPerSecond:16000});
+    mo.rec=mr;
+    mr.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};
+    mr.onstop=function(){
+      stream.getTracks().forEach(function(t){t.stop()});mo.rec=null;clearTimeout(mo.recT);
+      var blob=new Blob(chunks,{type:mr.mimeType||'audio/webm'}),fr=new FileReader();
+      fr.onload=function(){
+        if(fr.result.length>90000){toast('That recording is too long. Keep it short.',true);draft.mvoice='';}else draft.mvoice=fr.result;
+        if(cur==='moments')render();
+      };
+      fr.readAsDataURL(blob);
+    };
+    mr.start();mo.recT=setTimeout(stopRec,12000);
+    if(cur==='moments')render();
+  }).catch(function(){toast('Allow the microphone to record a voice note.',true)});
+}
+function newSparkModal(){
+  if(!S.friends.length){toast('Connect with a friend first, then start a Spark.',true);return}
+  openModal('<h3>Start a Spark</h3><div class="stack">'+
+   '<label class="f">Title<input type="text" id="spTitle" maxlength="60" placeholder="Ooty trip, 2026"></label>'+
+   '<label class="f">What happened?<textarea id="spText" maxlength="300" rows="3" placeholder="Tell them the start of the story"></textarea></label>'+
+   '<label class="f">A photo (optional)<input type="file" id="spPhoto" accept="image/*"></label><div id="spPrev"></div>'+
+   '<div><div class="muted" style="font-size:13px;margin-bottom:6px">Who is invited to join the Circle</div><div class="row">'+S.friends.map(function(f){return '<label class="chk"><input type="checkbox" data-sp="'+f.id+'" checked>'+esc(f.name)+'</label>'}).join('')+'</div></div>'+
+   '<div class="row"><button class="btn" data-act="mo-create">Light the Spark</button><button class="btn ghost" data-act="close-modal">Cancel</button></div></div>');
+  draft.sphoto='';
+  var f=$('#spPhoto');if(f)f.addEventListener('change',function(){shrinkPhoto(f.files[0],function(d){draft.sphoto=d;$('#spPrev').innerHTML='<img class="cimg" src="'+d+'" alt="Preview">'})});
+}
+function newId(){return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function vTapes(){
   var cards=S.tapes.slice().sort(function(a,b){return b.at-a.at}).map(function(t){
     var by=t.from==='me'?'You':friend(t.from).name;
@@ -1264,6 +1441,33 @@ document.addEventListener('click',function(e){
    case 'goto-keep-pigeons':sub='pigeons';location.hash='#keepsakes';if(cur==='keepsakes')render();break;
    case 'quick':sub=t.getAttribute('data-to');if(cur==='keepsakes')render();else location.hash='#keepsakes';break;
    case 'sub':sub=id;render();break;
+   case 'close-modal':closeModal();break;
+   case 'mo-tab':mo.tab=id;render();break;
+   case 'mo-open':mo.sel=id;draft.ctype='note';draft.mnote='';draft.mphoto='';draft.mvoice='';render();window.scrollTo(0,0);break;
+   case 'mo-back':stopRec();mo.sel=null;render();break;
+   case 'mo-new':newSparkModal();break;
+   case 'mo-ctype':draft.ctype=id;render();break;
+   case 'mo-rec':if(mo.rec)stopRec();else{draft.mvoice='';startRec()}break;
+   case 'mo-create':{
+     var ti=($('#spTitle').value||'').trim();if(!ti){toast('Give the Spark a title.',true);break}
+     var inv=[].slice.call(document.querySelectorAll('[data-sp]')).filter(function(x){return x.checked}).map(function(x){return x.getAttribute('data-sp')});
+     if(!inv.length){toast('Invite at least one friend.',true);break}
+     var tx=($('#spText').value||'').trim(),ph=draft.sphoto||'';
+     if(LIVE){BF.createSpark({title:ti,text:tx,photo:ph,members:inv.concat([LIVE.uid])}).then(function(id){closeModal();mo.sel=id;mo.tab='sparks';draft.ctype='note';draft.mnote='';draft.mphoto='';draft.mvoice='';if(cur!=='moments')location.hash='#moments';else render();toast('Spark lit. Your friends can join now.',true)}).catch(function(){toast('Could not start the Spark. Check your connection.',true)});break}
+     (S.sparks=S.sparks||[]).push({id:newId(),owner:'me',title:ti,text:tx,photo:ph,members:inv,at:Date.now(),closed:false,contribs:[]});save();closeModal();toast('Spark lit.',true);render();break}
+   case 'mo-add':{
+     var ty=draft.ctype||'note',tx2=($('#moText')?$('#moText').value:'').trim(),md='';
+     if(ty==='photo'){md=draft.mphoto||'';if(!md){toast('Choose a photo first.',true);break}}
+     else if(ty==='voice'){md=draft.mvoice||'';if(!md){toast('Record something first.',true);break}}
+     else if(!tx2){toast('Write something first.',true);break}
+     var done2=function(){draft.mnote='';draft.mphoto='';draft.mvoice='';toast('Added to the Circle.',true);render()};
+     if(LIVE){BF.addContrib(id,{type:ty,text:tx2,media:md}).then(done2).catch(function(){toast('Could not add. Check your connection.',true)});break}
+     var spx=(S.sparks||[]).filter(function(x){return x.id===id})[0];if(!spx)break;
+     spx.contribs.push({id:newId(),by:'me',type:ty,text:tx2,media:md,at:Date.now()});save();done2();break}
+   case 'mo-complete':{
+     if(!confirm('Complete this Spark and save it as an Afterglow? No one can add to it after this.'))break;
+     if(LIVE){BF.closeSpark(id).then(function(){mo.tab='afterglow';toast('Saved to Afterglow.',true)}).catch(function(){toast('Could not complete it.',true)});break}
+     var spy=(S.sparks||[]).filter(function(x){return x.id===id})[0];if(spy){spy.closed=true;spy.closedAt=Date.now();save();mo.tab='afterglow';mo.sel=null;toast('Saved to Afterglow.',true);render()}break}
    case 'frame':draft.frame=id;keepForm(vKeep);break;
    case 'filt':draft.filt=id;keepForm(vKeep);break;
    case 'develop':{
@@ -1443,7 +1647,7 @@ function renderGate(msg){
   $('#banner').innerHTML='';
   $('#view').innerHTML='<div class="gatebox"><div class="flame"></div><h1>Bonfire</h1><p class="muted">A private place for the people you choose. You stay invisible until you decide otherwise.</p><button class="btn" data-act="signin">Continue with Google</button><button class="btn ghost small" data-act="demo">Look around in demo mode</button>'+(msg?'<p style="color:var(--flame)">'+esc(msg)+'</p>':'')+'</div>';
 }
-function stopLive(){for(var k in live.unsubs){try{live.unsubs[k]()}catch(e){}}live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{}}}
+function stopLive(){for(var k in live.unsubs){try{live.unsubs[k]()}catch(e){}}live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{},sparks:[],contribs:{}}}
 function bootLive(){
   document.body.classList.add('gate');
   $('#view').innerHTML='<div class="gatebox boot">'+LOGO+'<p class="muted">Lighting the fire…</p></div>';
@@ -1472,9 +1676,31 @@ function startLive(user,p){
     });
     syncLive();
   });
+  live.sparkSeen=null;live.contribSeen={};
+  live.unsubs.sparks=BF.onSparks(function(list){
+    if(live.sparkSeen)list.forEach(function(sp){if(!live.sparkSeen[sp.id]&&sp.owner!==user.uid){toast(sp.ownerName+' started a Spark: '+sp.title);pushNote(sp.ownerName+' started a Spark',sp.title,'spark-'+sp.id)}});
+    live.sparkSeen={};list.forEach(function(sp){live.sparkSeen[sp.id]=1});
+    live.sparks=list;
+    list.forEach(function(sp){
+      if(live.unsubs['c'+sp.id])return;
+      live.unsubs['c'+sp.id]=BF.onContribs(sp.id,function(cs){
+        var prev=live.contribSeen[sp.id];
+        if(prev)cs.filter(function(c){return !prev[c.id]&&c.by!==user.uid}).forEach(function(c){toast(c.byName+' added to “'+sp.title+'”.');pushNote(c.byName+' added to a Spark',sp.title,'contrib-'+c.id)});
+        live.contribSeen[sp.id]={};cs.forEach(function(c){live.contribSeen[sp.id][c.id]=1});
+        live.contribs[sp.id]=cs;if(cur==='moments')refreshMoments();
+      });
+    });
+    if(cur==='moments')refreshMoments();
+  });
   route();
   handleJoin();
   if(!LIVE.username)setTimeout(askUsername,600);
+}
+function refreshMoments(){
+  var a=document.activeElement;
+  if(a&&(a.id==='moText'||a.id==='spTitle'))return;
+  if(mo.rec)return;
+  render();
 }
 function announce(c,prev,ms){
   if(!prev||ms.length<=prev.length)return;
