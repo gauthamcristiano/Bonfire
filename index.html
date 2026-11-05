@@ -648,6 +648,11 @@ h1+p,.view-sub,.lede{color:var(--muted);max-width:52ch}
 .spk-img img{width:100%;height:100%;object-fit:cover;display:block}
 img[data-mkey]:not(.mok){min-height:120px;background:var(--surface2)}
 .mfail{opacity:.4}
+
+.rep{background:none;border:0;color:var(--muted);font-size:12px;cursor:pointer;padding:0 0 0 8px;text-decoration:underline}
+.card.danger{border-color:rgba(229,72,77,.35)!important}
+.dotbtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--fg);display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
+.dotbtn svg{width:18px;height:18px;fill:currentColor;stroke:none}
 </style>
 
 <body>
@@ -729,7 +734,7 @@ function seed(){
     fbShown:0
   };
 }
-var S,LIVE=null,DEMO=false,JOIN=null,live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{},sparks:[],contribs:{}};
+var S,LIVE=null,DEMO=false,JOIN=null,live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{},sparks:[],contribs:{},blocked:{}};
 try{var raw=localStorage.getItem('bonfire-v1');S=raw?JSON.parse(raw):null}catch(e){S=null}
 if(!S||!S.friends)S=seed();
 try{JOIN=new URLSearchParams(location.search).get('join')}catch(e){}
@@ -769,7 +774,8 @@ function toast(msg,force){
   setTimeout(function(){d.remove()},3600);
 }
 function openModal(html){var m=$('#modal');m.innerHTML='<div class="box">'+html+'</div>';m.classList.add('on')}
-function closeModal(){var m=$('#modal');m.classList.remove('on');m.innerHTML=''}
+var termsPending=false;
+function closeModal(){if(termsPending)return;var m=$('#modal');m.classList.remove('on');m.innerHTML=''}
 $('#modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
 
@@ -817,6 +823,8 @@ function ico(n){
     bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
     tape:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>',
+    dots:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+    shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
     back:'<path d="M15 5l-7 7 7 7"/>',
     mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
     play:'<path d="M7 4.5v15l13-7.5z"/>',
@@ -951,7 +959,7 @@ function msgsHtml(ms){
 function threadHtml(){
   if(!chatWith)return '<div class="empty" style="margin:auto;border:0">Pick a friend to start talking.</div>';
   var f=friend(chatWith),ms=S.chats[chatWith]||[];
-  return '<header><button class="btn ghost small back" data-act="back">←</button>'+av(f,40)+'<div><b>'+esc(f.name)+'</b><div class="muted" style="font-size:12px">'+(quietOn()?'You are on quiet hours. No need to answer.':(f.username?'@'+esc(f.username):'Private chat'))+'</div></div></header>'+
+  return '<header><button class="btn ghost small back" data-act="back">←</button>'+av(f,40)+'<div style="flex:1;min-width:0"><b>'+esc(f.name)+'</b><div class="muted" style="font-size:12px">'+(quietOn()?'You are on quiet hours. No need to answer.':(f.username?'@'+esc(f.username):'Private chat'))+'</div></div>'+(LIVE?'<button class="dotbtn" data-act="chat-menu" aria-label="Block or report">'+ico('dots')+'</button>':'')+'</header>'+
    '<div class="msgs" id="msgs">'+(ms.length?msgsHtml(ms):'<div class="empty">No messages yet.</div>')+'</div>'+
    '<div class="nolikes">Private. No likes, no counters.</div>'+
    '<form class="compose" id="sendForm"><input type="text" id="msgIn" placeholder="Write to '+esc(f.name)+'" autocomplete="off" aria-label="Message"><button class="send" type="submit" aria-label="Send">'+ico('send')+'</button></form>';
@@ -961,6 +969,7 @@ function iTalk(){
   var f=$('#sendForm');
   if(f)f.addEventListener('submit',function(e){
     e.preventDefault();var i=$('#msgIn'),v=i.value.trim();if(!v)return;
+    if(Date.now()-(window.__lastSend||0)<400)return;window.__lastSend=Date.now();
     i.value='';
     if(LIVE){BF.sendMessage(friend(chatWith).chatId,{text:v}).catch(function(){toast('Message not sent. Check your connection.',true)});return}
     sendMsg(chatWith,{f:'me',t:v,at:Date.now()});
@@ -1245,8 +1254,9 @@ function vMoments(){
     '<div class="empty">Afterglow is where finished Sparks live as memories. Complete a Spark to keep it here.</div>';
   return head+tabs+body;
 }
+var curSparkId='';
 function contribHtml(c){
-  var who='<div class="cwho">'+av(personCard(c.byId,c.byName),26)+'<b>'+esc(c.byName)+'</b><small>'+fmtDay(c.at)+'</small></div>';
+  var who='<div class="cwho">'+av(personCard(c.byId,c.byName),26)+'<b>'+esc(c.byName)+'</b><small>'+fmtDay(c.at)+'</small>'+((LIVE&&!c.mine)?'<button class="rep" data-act="report-contrib" data-id="'+esc(c.id)+'" data-by="'+esc(c.byId)+'">Report</button>':'')+'</div>';
   var b='';
   var mk=c.mkey?' data-mkey="'+esc(c.mkey)+'"':'',ms=c.media?' src="'+c.media+'"':'';
   if(c.type==='photo')b=((c.media||c.mkey)?'<img class="cimg"'+mk+ms+' alt="Photo from '+esc(c.byName)+'">':'')+(c.text?'<p class="chand">'+esc(c.text)+'</p>':'');
@@ -1257,6 +1267,7 @@ function contribHtml(c){
   return '<div class="contrib">'+who+b+'</div>';
 }
 function vSpark(sp){
+  curSparkId=sp.id;
   var ps=people(sp),ctype=draft.ctype||'note';
   var h='<button class="btn ghost small" data-act="mo-back">'+ico('back')+' All moments</button>'+
    '<article class="sparkhead">'+(sp.pkey?'<img class="spk-hero" data-mkey="'+esc(sp.pkey)+'" alt="">':(sp.photo?'<img class="spk-hero" src="'+sp.photo+'" alt="">':''))+
@@ -1342,6 +1353,46 @@ function newSparkModal(){
     else shrinkPhoto(f.files[0],function(d){draft.sphoto=d;$('#spPrev').innerHTML='<img class="cimg" src="'+d+'" alt="Preview">'})});
 }
 function newId(){return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+/* ---------- Trust and safety ---------- */
+function safetyCards(){
+  var ids=Object.keys(live.blocked||{});
+  var blocked='<div class="card stack"><h3>Blocked people</h3>'+(ids.length?ids.map(function(i){var b=live.blocked[i];return '<div class="row" style="justify-content:space-between"><b>'+esc(b.name||'Someone')+'</b><button class="btn ghost small" data-act="unblock" data-id="'+esc(i)+'">Unblock</button></div>'}).join(''):'<p class="muted">No one. If someone bothers you, open their chat and tap the three dots.</p>')+'</div>';
+  var data='<div class="card stack"><h3>Your data</h3><p class="muted">Download a copy of everything Bonfire has for you, as one file.</p><div class="row"><button class="btn ghost" data-act="export-data">Download my data</button></div>'+
+    '<div class="row" style="gap:14px;flex-wrap:wrap"><a class="link" href="legal.html#privacy" target="_blank" rel="noopener">Privacy Policy</a><a class="link" href="legal.html#terms" target="_blank" rel="noopener">Terms</a><a class="link" href="legal.html#guidelines" target="_blank" rel="noopener">Community guidelines</a></div></div>';
+  var del='<div class="card stack danger"><h3>Delete my account</h3><p class="muted">Permanently removes your profile, username, messages, and the Sparks you started. This cannot be undone.</p><div class="row"><button class="btn ghost" data-act="delete-account">Delete my account</button></div></div>';
+  return blocked+data+del;
+}
+function askTerms(){
+  if(!LIVE||termsPending)return;
+  termsPending=true;
+  openModal('<h3>Before you start</h3><div class="stack"><p>Bonfire is for people 18 and older. Please confirm to continue.</p>'+
+    '<label class="chk"><input type="checkbox" id="termsOk"> I am 18 or older and I agree to the <a href="legal.html#terms" target="_blank" rel="noopener">Terms</a> and <a href="legal.html#privacy" target="_blank" rel="noopener">Privacy Policy</a>.</label>'+
+    '<div class="row"><button class="btn" data-act="terms-ok" disabled id="termsBtn">Continue</button><button class="btn ghost" data-act="signout">Sign out</button></div></div>');
+  var c=$('#termsOk');if(c)c.addEventListener('change',function(){$('#termsBtn').disabled=!c.checked});
+}
+var REPORT_REASONS=['Spam','Harassment or bullying','Inappropriate content','Pretending to be someone','Something else'];
+function reportModal(target,ctx,label){
+  openModal('<h3>Report '+esc(label)+'</h3><div class="stack"><p class="muted">Reports are private. We review them and can remove content or accounts. The person is not told who reported.</p>'+
+    '<label class="f">What is wrong?<select id="repReason">'+REPORT_REASONS.map(function(r){return '<option>'+r+'</option>'}).join('')+'</select></label>'+
+    '<label class="f">Details (optional)<textarea id="repDetail" maxlength="500" rows="3"></textarea></label>'+
+    '<div class="row"><button class="btn" data-act="send-report" data-id="'+esc(target)+'" data-ctx="'+esc(JSON.stringify(ctx||{}))+'">Send report</button><button class="btn ghost" data-act="close-modal">Cancel</button></div></div>');
+}
+function exportData(){
+  var d={exportedAt:new Date().toISOString(),account:{name:LIVE.name,username:LIVE.username,bondId:LIVE.bondId,visibility:S.vis},
+    friends:S.friends.map(function(f){return {name:f.name,username:f.username}}),
+    messages:S.chats,sparks:allSparks().map(function(sp){return {title:sp.title,story:sp.text,startedBy:sp.ownerName,startedAt:new Date(sp.at).toISOString(),completed:sp.closed,
+      contributions:sp.contribs.map(function(c){return {by:c.byName,type:c.type,text:c.text,at:new Date(c.at).toISOString(),file:c.mkey||undefined}})}}),
+    keepsakePhotos:S.photos,letters:S.letters,timeCapsules:S.capsules,mixtapes:S.tapes,fireplaces:S.spaces,blocked:Object.keys(live.blocked||{}).length,
+    note:'Photos and voice notes stored in cloud storage are listed by file name only.'};
+  var blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='bonfire-my-data.json';document.body.appendChild(a);a.click();a.remove();
+}
+function mDelete(key){
+  if(!MEDIA)return Promise.resolve();
+  var sid=key.split('/')[1];
+  return BF.idToken().then(function(tk){return fetch(MEDIA+'/media/'+key,{method:'DELETE',headers:{Authorization:'Bearer '+tk}})});
+}
 function vTapes(){
   var cards=S.tapes.slice().sort(function(a,b){return b.at-a.at}).map(function(t){
     var by=t.from==='me'?'You':friend(t.from).name;
@@ -1388,6 +1439,7 @@ function vMe(){
     sec('You','Your photo, your name and the invitation that brings people in.',(LIVE?profileCard():'')+B)+
     sec('Privacy','You choose who can find you.',A+(LIVE?findCard():''))+
     sec('Comfort','Quiet time, whenever you want it.',(LIVE?notifyCard():'')+D)+
+    (LIVE?sec('Safety and your data','Block people, report problems, take your data with you, or leave.',safetyCards()):'')+
     sec('Help Bonfire grow','',fbCard()+F);
 }
 /* ---------- feedback to the maker (shared db) ---------- */
@@ -1633,7 +1685,26 @@ document.addEventListener('click',function(e){
      });break}
    case 'signin':BF.signIn().catch(function(){renderGate('Sign-in did not finish. Allow pop-ups and try again.')});break;
    case 'demo':try{sessionStorage.setItem('bonfire-demo','1')}catch(err){}location.reload();break;
-   case 'signout':BF.signOut();break;
+   case 'signout':termsPending=false;BF.signOut();break;
+   case 'terms-ok':{var tb=t;tb.disabled=true;BF.acceptTerms().then(function(){termsPending=false;closeModal()}).catch(function(){tb.disabled=false;toast('Could not save. Check your connection.',true)});break}
+   case 'chat-menu':{var cf=friend(chatWith);openModal('<h3>'+esc(cf.name)+'</h3><div class="stack"><button class="btn ghost" data-act="report-person" data-id="'+esc(chatWith)+'">Report</button><button class="btn ghost" data-act="block-person" data-id="'+esc(chatWith)+'">Block</button><button class="btn ghost" data-act="close-modal">Cancel</button></div>');break}
+   case 'block-person':{var bf=friend(id);openModal('<h3>Block '+esc(bf.name)+'?</h3><div class="stack"><p class="muted">They can no longer message you or send you invitations, and the chat disappears from your list. They are not told. You can unblock from Me.</p><div class="row"><button class="btn" data-act="do-block" data-id="'+esc(id)+'">Block</button><button class="btn ghost" data-act="close-modal">Cancel</button></div></div>');break}
+   case 'do-block':{var bn=friend(id).name;BF.block(id,bn).then(function(){chatWith=null;closeModal();toast(bn+' is blocked.',true)}).catch(function(){toast('Could not block. Try again.',true)});break}
+   case 'unblock':BF.unblock(id).then(function(){toast('Unblocked.',true)}).catch(function(){toast('Could not unblock. Try again.',true)});break;
+   case 'report-person':reportModal(id,{chat:friend(id).chatId||''},friend(id).name);break;
+   case 'report-contrib':reportModal(t.getAttribute('data-by'),{spark:curSparkId,contribution:id},'this contribution');break;
+   case 'send-report':{var ctx={};try{ctx=JSON.parse(t.getAttribute('data-ctx')||'{}')}catch(err){}t.disabled=true;BF.report({target:id,reason:$('#repReason').value,detail:($('#repDetail').value||'').trim(),context:ctx}).then(function(){closeModal();toast('Report sent. Thank you.',true)}).catch(function(){t.disabled=false;toast('Could not send the report. Try again.',true)});break}
+   case 'export-data':exportData();toast('Your data was downloaded.',true);break;
+   case 'delete-account':{openModal('<h3>Delete your account?</h3><div class="stack"><p>This permanently removes your profile, username, your messages, and every Spark you started (for everyone in it). Photos and voice notes you added are deleted too. It cannot be undone.</p><label class="f">Type DELETE to confirm<input type="text" id="delConf" autocomplete="off"></label><div class="muted" id="delMsg"></div><div class="row"><button class="btn" id="delGo" data-act="do-delete" disabled>Delete everything</button><button class="btn ghost" data-act="close-modal">Cancel</button></div></div>');var dc=$('#delConf');if(dc)dc.addEventListener('input',function(){$('#delGo').disabled=(dc.value.trim()!=='DELETE')});break}
+   case 'do-delete':{
+     t.disabled=true;var uidDel=LIVE.uid;
+     BF.deleteAccount({progress:function(m){var e=$('#delMsg');if(e)e.textContent=m+'…'},deleteMedia:mDelete}).then(function(){
+       try{localStorage.removeItem('bonfire-live-'+uidDel)}catch(err){}
+       location.reload();
+     }).catch(function(e){
+       t.disabled=false;var m=$('#delMsg');
+       if(m)m.textContent=(e&&e.code==='reauth')?'Please confirm with Google when asked, then try again.':'Could not finish. Check your connection and try again. Nothing is lost by retrying.';
+     });break}
    case 'find':{
      var fq=$('#findQ').value;
      BF.search(fq).then(function(list){
@@ -1694,9 +1765,9 @@ function findCard(){return '<div class="card stack"><h3>Find people</h3><p class
 function renderGate(msg){
   document.body.classList.add('gate');
   $('#banner').innerHTML='';
-  $('#view').innerHTML='<div class="gatebox"><div class="flame"></div><h1>Bonfire</h1><p class="muted">A private place for the people you choose. You stay invisible until you decide otherwise.</p><button class="btn" data-act="signin">Continue with Google</button><button class="btn ghost small" data-act="demo">Look around in demo mode</button>'+(msg?'<p style="color:var(--flame)">'+esc(msg)+'</p>':'')+'</div>';
+  $('#view').innerHTML='<div class="gatebox"><div class="flame"></div><h1>Bonfire</h1><p class="muted">A private place for the people you choose. You stay invisible until you decide otherwise.</p><button class="btn" data-act="signin">Continue with Google</button><button class="btn ghost small" data-act="demo">Look around in demo mode</button><p class="muted" style="font-size:12px;max-width:34ch">For people 18 and older. By continuing you agree to the <a href="legal.html#terms" target="_blank" rel="noopener">Terms</a> and <a href="legal.html#privacy" target="_blank" rel="noopener">Privacy Policy</a>.</p>'+(msg?'<p style="color:var(--flame)">'+esc(msg)+'</p>':'')+'</div>';
 }
-function stopLive(){for(var k in live.unsubs){try{live.unsubs[k]()}catch(e){}}live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{},sparks:[],contribs:{}}}
+function stopLive(){for(var k in live.unsubs){try{live.unsubs[k]()}catch(e){}}live={inbox:[],chats:[],msgs:{},unsubs:{},profiles:{},sparks:[],contribs:{},blocked:{}}}
 function bootLive(){
   document.body.classList.add('gate');
   $('#view').innerHTML='<div class="gatebox boot">'+LOGO+'<p class="muted">Lighting the fire…</p></div>';
@@ -1712,6 +1783,7 @@ function startLive(user,p){
   document.body.classList.remove('gate');
   live.unsubs.inbox=BF.onInbox(function(list){
     var prev=live.inboxSeen;
+    list=list.filter(function(r){return !(live.blocked&&live.blocked[r.uid])});
     if(prev)list.forEach(function(r){if(!prev[r.uid]){toast('A pigeon arrived from '+r.fromName+'.');pushNote('Pigeon from '+r.fromName,r.note||'They would like to connect.','pigeon-'+r.uid)}});
     live.inboxSeen={};list.forEach(function(r){live.inboxSeen[r.uid]=1});
     live.inbox=list;syncLive()});
@@ -1725,6 +1797,8 @@ function startLive(user,p){
     });
     syncLive();
   });
+  live.unsubs.blocks=BF.onBlocks(function(m){live.blocked=m;if(chatWith&&m[chatWith])chatWith=null;syncLive();if(cur==='me'||cur==='talk')render()});
+  if(!p.termsAt)setTimeout(askTerms,400);
   live.sparkSeen=null;live.contribSeen={};
   live.unsubs.sparks=BF.onSparks(function(list){
     if(live.sparkSeen)list.forEach(function(sp){if(!live.sparkSeen[sp.id]&&sp.owner!==user.uid){toast(sp.ownerName+' started a Spark: '+sp.title);pushNote(sp.ownerName+' started a Spark',sp.title,'spark-'+sp.id)}});
@@ -1754,6 +1828,7 @@ function refreshMoments(){
 function announce(c,prev,ms){
   if(!prev||ms.length<=prev.length)return;
   var other=c.members.filter(function(m){return m!==LIVE.uid})[0];
+  if(live.blocked&&live.blocked[other])return;
   var fresh=ms.slice(prev.length).filter(function(m){return m.from!==LIVE.uid});
   if(!fresh.length)return;
   if(cur==='talk'&&chatWith===other&&!document.hidden)return;
@@ -1768,6 +1843,7 @@ function syncLive(){
   var me=LIVE.uid,friends=[],chats={},letters=[],unread={},lastAt={};
   live.chats.forEach(function(c){
     var other=c.members.filter(function(m){return m!==me})[0];if(!other)return;
+    if(live.blocked&&live.blocked[other])return;
     var pr=live.profiles[other]||{};
     friends.push({id:other,name:pr.name||(c.names&&c.names[other])||'Friend',username:pr.username||'',photo:pr.photo||'',c:colorFor(other),chatId:c.id});
     var arr=[];
@@ -1784,7 +1860,7 @@ function syncLive(){
   });
   friends.sort(function(a,b){return (lastAt[b.id]||0)-(lastAt[a.id]||0)});
   S.friends=friends;S.chats=chats;S.letters=letters;S.unread=unread;
-  S.pigeons=S.pigeons.filter(function(p){return p.dir==='out'}).concat(live.inbox.map(function(r){return {id:r.uid,dir:'in',who:r.uid,fname:r.fromName,msg:r.note||'They would like to connect.',at:r.at,state:'new'}}));
+  S.pigeons=S.pigeons.filter(function(p){return p.dir==='out'}).concat(live.inbox.filter(function(r){return !(live.blocked&&live.blocked[r.uid])}).map(function(r){return {id:r.uid,dir:'in',who:r.uid,fname:r.fromName,msg:r.note||'They would like to connect.',at:r.at,state:'new'}}));
   save();
   var tot=totalUnread();
   try{document.title=(tot?'('+tot+') ':'')+'Bonfire';if(navigator.setAppBadge){tot&&!quietOn()?navigator.setAppBadge(tot):navigator.clearAppBadge()}}catch(e){}
